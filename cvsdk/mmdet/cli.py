@@ -3,11 +3,13 @@ import subprocess
 import sys
 
 import click
+import pandas as pd
 
 from cvsdk.mmdet.board import log_metrics_to_tensorboard, parse_json_log_file
 from cvsdk.mmdet.detect import detect as _detect
 from cvsdk.mmdet.eval import evaluate as evaluate
 from cvsdk.mmdet.utils import MMDetModels
+from cvsdk.model.eval.boxes import DetectionsEvaluator
 
 import os
 import sys
@@ -65,6 +67,49 @@ def eval(
         results_file=out,
         score_threshold=score_threshold,
     )
+
+
+@mmdet.command()
+@click.argument('gt', type=click.Path(exists=True, dir_okay=False))
+@click.argument('det', type=click.Path(exists=True, dir_okay=False))
+@click.argument('output_path', type=click.Path(dir_okay=False))
+@click.option('--iou-threshold', '-t', default=0.5, show_default=True,
+              help='Minimum IoU for a detection to be considered a True Positive.')
+@click.option('--epoch', '-e', type=int, default=None,
+              help='Epoch number to filter both GT and detections.')
+@click.option('--class-name', '-c', default=None,
+              help='Class name to filter both GT and detections.')
+def evaluate_cli(gt: str,
+                 det: str,
+                 output_path: str,
+                 iou_threshold: float,
+                 epoch: int | None,
+                 class_name: str | None):
+    """Evaluate object detection results against ground truth.
+
+    GT and detections CSVs must include columns:
+      epoch, filename, class_index, class_name, xmin, ymin, xmax, ymax
+    Detections CSV must also include a 'score' column.
+
+    The output CSV will contain all original detection columns plus an 'evaluation'
+    column with values 'TP', 'FP', or 'FN'.
+    """
+    # Read inputs
+    gt_df = pd.read_csv(gt)
+    det_df = pd.read_csv(det)
+
+    # Perform evaluation
+    eval_df = DetectionsEvaluator.evaluate(
+        detections_df=det_df,
+        ground_truth_df=gt_df,
+        iou_threshold=iou_threshold,
+        epoch=epoch,
+        class_name=class_name
+    )
+
+    # Save results
+    eval_df.to_csv(output_path, index=False)
+    click.echo(f"Evaluation complete; results saved to {output_path}")
 
 
 @mmdet.command()

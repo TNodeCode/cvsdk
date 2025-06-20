@@ -38,6 +38,8 @@ dependencies = [
     "einops>=0.8.1",
     "mlstm-kernels>=2.0.0",
     "xlstm>=2.0.3",
+    "pytorch-lightning>=2.5.2",
+    "lightning>=2.5.2",
 ]
 
 [dependency-groups]

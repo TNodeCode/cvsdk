@@ -10,10 +10,21 @@ class BoundingBox(BaseModel):
     width: float = Field(..., ge=0)
     height: float = Field(..., ge=0)
     category_id: int
-    id: Optional[int] = None
+    id: int | None = None
 
     @field_validator('xmin', 'ymin', 'width', 'height')
-    def check_is_integer(cls, v):
+    def check_is_integer(cls, v: int) -> int:
+        """Check if value is integer.
+
+        Args:
+            v (int): value
+
+        Raises:
+            ValueError: raised when value is not an integer
+
+        Returns:
+            int: value
+        """
         if not float(v).is_integer():
             raise ValueError("Bounding box coordinates must be integers")
         return v
@@ -21,12 +32,20 @@ class BoundingBox(BaseModel):
 
 class SegmentationMask(BaseModel):
     """Represents a segmentation mask as a list of polygons."""
-    segmentation: List[List[float]]
+    segmentation: list[list[float]]
     category_id: int
-    id: Optional[int] = None
+    id: int | None = None
 
     @field_validator('segmentation')
-    def check_polygon_coords(cls, polygon):
+    def check_polygon_coords(cls, polygon: list[float]) -> list[float]:
+        """Check polygon coords.
+
+        Args:
+            polygon (list[float]): polygon coordinates
+
+        Returns:
+            list[float]: polygon coordinates
+        """
         if len(polygon) % 2 != 0:
             raise ValueError("Polygon coordinates must be in pairs of (x, y)")
         if not all(float(x).is_integer() for x in polygon):
@@ -55,7 +74,15 @@ class Image(BaseModel):
 
     @model_validator(mode='after')
     @classmethod
-    def check_dimensions_and_coords(cls, values: Self):
+    def check_dimensions_and_coords(cls, values: Self) -> Self:
+        """Check box and segmentation mask coordinates against image dimensions.
+
+        Args:
+            values (Self): Image object
+
+        Returns:
+            Self: itself
+        """
         width = values.width
         height = values.height
 
@@ -81,13 +108,21 @@ class Image(BaseModel):
 
 class Dataset(BaseModel):
     """Represents an entire dataset."""
-    images: List[Image]
-    categories: Dict[int, str]
+    images: list[Image]
+    categories: dict[int, str]
     task_type: str  # "detection", "segmentation", "panoptic", "classification"
 
     @model_validator(mode='after')
     @classmethod
-    def validate_dataset(cls, values: Self):
+    def validate_dataset(cls, values: Self) -> Self:
+        """Validate dataset.
+
+        Args:
+            values (Self): Dataset object
+
+        Returns:
+            Self: itself
+        """
         images = values.images
         categories = values.categories
 
@@ -112,7 +147,7 @@ class Dataset(BaseModel):
             for segment in image.panoptic_segments:
                 if segment.category_id not in categories:
                     raise ValueError(f"Invalid category_id {segment.category_id} in panoptic segment in image {image.id}")
-                
+
         return values
 
 
