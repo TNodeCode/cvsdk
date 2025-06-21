@@ -68,8 +68,9 @@ class MultiCropTransform:
             [
                 T.RandomResizedCrop(local_size, scale=(0.05, 0.25)),
                 flip_and_color,
-                T.GaussianBlur(7, sigma=(0.1, 2.0)),
+                #T.GaussianBlur(7, sigma=(0.1, 2.0)),
                 normalize,
+                T.Resize(224)
             ]
         )
         self.local_crops = local_crops

@@ -1,11 +1,17 @@
 import argparse
 
 import pytorch_lightning as pl
+import timm
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.models as tvm
 from data import ImageNetMultiCropDataModule
 from dino_module import DINOHead, DINOLightningModule
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
+
+logger = TensorBoardLogger("logs", name="dino")
 
 
 # --------------------------- helper to wrap a backbone ------------------------ #
@@ -23,6 +29,23 @@ def resnet50_dino(out_dim=65_536, pretrained=True):
             return self.projector(feat)
     return ResNetWrapper()
 
+def vit_base_dino(out_dim=65536, pretrained=True):
+    vit = tvm.vit_b_16(weights="IMAGENET1K_V1" if pretrained else None)
+    vit.heads = nn.Identity()        # remove classifier
+    vit.out_dim = vit.hidden_dim     # typically 768
+
+    class ViTWrapper(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.backbone = vit
+            self.projector = DINOHead(in_dim=vit.out_dim, out_dim=out_dim)
+
+        def forward(self, x):
+            feat = self.backbone(x)  # CLS token output
+            return self.projector(feat)
+
+    return ViTWrapper()
+
 # ----------------------------------- CLI ------------------------------------- #
 def main() -> None:
     p = argparse.ArgumentParser()
@@ -33,8 +56,19 @@ def main() -> None:
     args = p.parse_args()
 
     # student & teacher --------------------------------------------------------
-    student = resnet50_dino()
-    teacher = resnet50_dino()
+    student = vit_base_dino()
+    teacher = vit_base_dino()
+    teacher.load_state_dict(student.state_dict())
+
+    student.projector.last_layer.weight_g.requires_grad = False
+    teacher.eval()
+    for p in teacher.parameters():
+        p.requires_grad = False
+
+    if False: #only on Linux where Triton is available
+        # Compile both
+        student = torch.compile(student)
+        teacher = torch.compile(teacher)
 
     # Lightning objects --------------------------------------------------------
     module = DINOLightningModule(
@@ -61,13 +95,13 @@ def main() -> None:
         devices=args.gpus,
         strategy="auto",
         enable_progress_bar=True,       # still shows pbar
-        precision="32-true",       # "32-true", "bf16-mixed", …
+        precision="16-mixed",       # "32-true", "bf16-mixed", …
         callbacks=[ckpt, lrmon],
         log_every_n_steps=50,
+        logger=logger,
     )
     trainer.fit(module, datamodule=datamodule)
 
 
 if __name__ == "__main__":
-    print("RUN")
     main()

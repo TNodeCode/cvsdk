@@ -60,12 +60,12 @@ class DINOLightningModule(pl.LightningModule):
         out_dim: int = 65_536,
         total_epochs: int = 300,
         warmup_epochs: int = 10,
-        base_lr: float = 5e-4,          # will be scaled by batch_size/256
+        base_lr: float = 1e-3,          # will be scaled by batch_size/256
         weight_decay: float = 0.04,
         weight_decay_end: float = 0.4,
         student_temp: float = 0.1,
         teacher_temp_start: float = 0.04,
-        teacher_temp_end: float = 0.07,
+        teacher_temp_end: float = 0.04,
         teacher_temp_warmup: int = 30_000,
         momentum_base: float = 0.996,
         momentum_end: float = 1.0,
@@ -77,6 +77,7 @@ class DINOLightningModule(pl.LightningModule):
         # networks ----------------------------------------------------------------
         self.student = student
         self.teacher = teacher
+        self.teacher.eval()
         for p in self.teacher.parameters():
             p.requires_grad = False  # teacher is frozen
 
@@ -96,6 +97,21 @@ class DINOLightningModule(pl.LightningModule):
     # --------------------------------------------------------------------------- #
     #                               training step                                 #
     # --------------------------------------------------------------------------- #
+    def on_train_batch_start(self, batch, batch_idx: int, dataloader_idx: int = 0) -> None:
+        # Just in case Lightning sets it to train mode again
+        self.teacher.eval()
+        self.student.projector.last_layer.weight_g.requires_grad = False
+        
+        # Optional: Update weight decay manually
+        wd = cosine_schedule(
+            self.hparams.weight_decay,
+            self.hparams.weight_decay_end,
+            self.total_steps,
+            self.global_step,
+        )
+        for param_group in self.optimizers().param_groups:
+            param_group["weight_decay"] = wd
+
     def training_step(
         self, batch: list[torch.Tensor], batch_idx: int
     ) -> torch.Tensor:
@@ -137,10 +153,28 @@ class DINOLightningModule(pl.LightningModule):
                 + batch_center * (1 - self.hp.center_momentum)
             )
 
-        # ---------------------- manual EMA teacher update -----------------------
-        self.update_teacher()
+        # If center is stuck near zero or teacher output is very small → collapse risk
+        if self.global_step % 100 == 0:
+            self.log("center_mean", self.center.mean())
+            self.log("teacher_out_mean", torch.cat(teacher_out).mean())
 
+        # ------------------ entropy monitoring ----------------------------------
+        if self.global_step % 5 == 0:
+            with torch.no_grad():
+                t_entropy = torch.stack([self.compute_entropy(t) for t in teacher_out]).mean()
+                s_entropy = torch.stack([self.compute_entropy(s) for s in student_out]).mean()
+                self.log("teacher_temp", self.teacher_temperature())
+                self.log("teacher_entropy", t_entropy, prog_bar=True)
+                self.log("student_entropy", s_entropy, prog_bar=True)
+                self.log("lr", self.optimizers().param_groups[0]["lr"], on_step=True)
+
+        if torch.isnan(loss) or torch.isinf(loss):
+            raise ValueError("Loss has collapsed: NaN or Inf")
+            
         return loss
+    
+    def on_train_batch_end(self, outputs, batch, batch_idx: int) -> None:
+        self.update_teacher()
 
     # --------------------------------------------------------------------------- #
     #                           EMA & temperature helpers                         #
@@ -155,7 +189,7 @@ class DINOLightningModule(pl.LightningModule):
         return cosine_schedule(
             self.hp.momentum_base,
             self.hp.momentum_end,
-            self.trainer.max_steps,
+            self.total_steps,
             self.global_step,
         )
 
@@ -169,6 +203,11 @@ class DINOLightningModule(pl.LightningModule):
                 / self.hp.teacher_temp_warmup
             )
         return self.hp.teacher_temp_end
+    
+    def compute_entropy(self, logits: torch.Tensor):
+        probs = F.softmax(logits, dim=-1)
+        entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1)
+        return entropy.mean()
 
 
     # ──────────────────────────────────────────────────────────────────────
@@ -238,9 +277,10 @@ class DINOLightningModule(pl.LightningModule):
     # --------------------------------------------------------------------------- #
     def configure_optimizers(self):
         # effective LR scaling -----------------------------------------------
-        per_device = self.trainer.datamodule.batch_size
+        batch_size = self.trainer.datamodule.batch_size
         world      = max(1, self.trainer.num_devices)
-        lr = self.hparams.base_lr * (per_device * world) / 256
+        lr = self.hparams.base_lr * (batch_size * world) / 256
+        print(f"Effective learning rate: {lr:.2e}")
 
         opt = torch.optim.AdamW(
             self.student.parameters(),
