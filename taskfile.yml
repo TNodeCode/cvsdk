@@ -30,9 +30,25 @@ tasks:
   install-mm:
     desc: Install the mmdetection library
     cmds:
-      - mim uninstall -y mmengine mmcv mmpretrain mmdet mmsegmentation
-      - mim install -U mmengine mmcv==2.1 mmpretrain mmdet mmsegmentation
+      - mim uninstall -y onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
+      - mim install -U onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
     dir: .
+
+  onedl:clone:
+    desc: Clone the onedl repositories
+    cmds:
+      - git clone https://github.com/vbti-development/onedl-mmengine
+      - git clone https://github.com/vbti-development/onedl-mmcv
+      - git clone https://github.com/vbti-development/onedl-mmpretrain
+      - git clone https://github.com/vbti-development/onedl-mmdetection
+      - git clone https://github.com/vbti-development/onedl-mmsegmentation
+    dir: repos
+
+  mmcv:compile:
+    desc: Compile mmcv with CUDA support (see https://onedl-mmcv.readthedocs.io/en/latest/get_started/build.html)
+    cmds:
+      - uv pip install -e . -v
+    dir: repos/onedl-mmcv
 
   run-tests:
     desc: Run tests

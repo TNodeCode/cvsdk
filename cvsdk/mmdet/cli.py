@@ -11,30 +11,57 @@ from cvsdk.mmdet.utils import MMDetModels
 
 import os
 import sys
+
 sys.path.append(os.path.join(os.getcwd(), "mmdetection"))
+
 
 @click.group()
 def mmdet():
     """CLI for training and managing a MMDet model on a custom dataset."""
 
+
 @mmdet.command()
 @click.argument("config-file", type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.argument("load-from", required=False, type=click.Path(exists=True, file_okay=True, dir_okay=False))
+@click.argument(
+    "load-from", required=False, type=click.Path(exists=True, file_okay=True, dir_okay=False)
+)
 def train(config_file: str, load_from: str | None):
     """Train the MMDet model."""
     MMDetModels.train(config_file=config_file, load_from=load_from)
 
+
 @mmdet.command()
-@click.option('--config-file', type=str, required=True, help='Name of the model')
-@click.option('--epoch', type=int, default=-1, help='Epoch which detections should be made for')
-@click.option('--work-dir', type=str, required=True, help='Root path of the checkpoint files')
-@click.option('--dataset-dir', type=str, required=True, help='Root path of dataset')
-@click.option('--image-files', type=str, required=True, help='Glob path for images')
-@click.option('--results-file', type=str, default='detections.csv', help='Name of the resulting CSV file')
-@click.option('--batch-size', type=int, default=2, help='Batch size for training (greater than 0, default: 2)')
-@click.option('--score-threshold', type=float, default=0.5, help='Minimum confidence score for bounding box detection')
-@click.option('--device', type=str, default='cuda:0', help='Device to use for detection (default: cuda:0)')
-def detect(config_file, epoch, work_dir, dataset_dir, image_files, results_file, batch_size, score_threshold, device):
+@click.option("--config-file", type=str, required=True, help="Name of the model")
+@click.option("--epoch", type=int, default=-1, help="Epoch which detections should be made for")
+@click.option("--work-dir", type=str, required=True, help="Root path of the checkpoint files")
+@click.option("--dataset-dir", type=str, required=True, help="Root path of dataset")
+@click.option("--image-files", type=str, required=True, help="Glob path for images")
+@click.option(
+    "--results-file", type=str, default="detections.csv", help="Name of the resulting CSV file"
+)
+@click.option(
+    "--batch-size", type=int, default=2, help="Batch size for training (greater than 0, default: 2)"
+)
+@click.option(
+    "--score-threshold",
+    type=float,
+    default=0.5,
+    help="Minimum confidence score for bounding box detection",
+)
+@click.option(
+    "--device", type=str, default="cuda:0", help="Device to use for detection (default: cuda:0)"
+)
+def detect(
+    config_file,
+    epoch,
+    work_dir,
+    dataset_dir,
+    image_files,
+    results_file,
+    batch_size,
+    score_threshold,
+    device,
+):
     _detect(
         config_file=config_file,
         epoch=epoch,
@@ -44,18 +71,35 @@ def detect(config_file, epoch, work_dir, dataset_dir, image_files, results_file,
         image_files=image_files.replace("'", ""),
         batch_size=batch_size,
         score_threshold=score_threshold,
-        device=device
+        device=device,
     )
 
 
 @mmdet.command()
-@click.option('--model_type', type=str, required=True, help='Type of model to use for detection')
-@click.option('--model_name', type=str, required=True, help='Name of the model')
-@click.option('--annotations', type=click.Path(exists=True, file_okay=True, dir_okay=False), required=True, help='Path to the annotations')
-@click.option('--epochs', type=int, required=True, help='Number of training epochs (greater than 0)')
-@click.option('--csv_file_pattern', type=str, required=True, help='Pattern for the CSV files ($i will be replaced by epoch number)')
-@click.option('--results_file', type=str, required=True, help='Name of the resulting CSV file')
-@click.option('--score-threshold', type=float, default=0.5, help='Minimum confidence score for bounding box detection')
+@click.option("--model_type", type=str, required=True, help="Type of model to use for detection")
+@click.option("--model_name", type=str, required=True, help="Name of the model")
+@click.option(
+    "--annotations",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+    required=True,
+    help="Path to the annotations",
+)
+@click.option(
+    "--epochs", type=int, required=True, help="Number of training epochs (greater than 0)"
+)
+@click.option(
+    "--csv_file_pattern",
+    type=str,
+    required=True,
+    help="Pattern for the CSV files ($i will be replaced by epoch number)",
+)
+@click.option("--results_file", type=str, required=True, help="Name of the resulting CSV file")
+@click.option(
+    "--score-threshold",
+    type=float,
+    default=0.5,
+    help="Minimum confidence score for bounding box detection",
+)
 def eval(
     model_type: str,
     model_name: str,
@@ -77,28 +121,48 @@ def eval(
 
 
 @mmdet.command()
-@click.option("--config-file", required=True, type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.option("--output-file", required=True, type=click.Path(exists=False, file_okay=True, dir_okay=False))
-@click.option("--load-from", required=False, type=click.Path(exists=True, file_okay=True, dir_okay=False))
+@click.option(
+    "--config-file", required=True, type=click.Path(exists=True, file_okay=True, dir_okay=False)
+)
+@click.option(
+    "--output-file", required=True, type=click.Path(exists=False, file_okay=True, dir_okay=False)
+)
+@click.option(
+    "--load-from", required=False, type=click.Path(exists=True, file_okay=True, dir_okay=False)
+)
 def extract_backbone(config_file: str, output_file: str, load_from: str | None):
     MMDetModels.extract_backbone(
-        config_file=config_file,
-        load_from=load_from,
-        output_file=output_file
+        config_file=config_file, load_from=load_from, output_file=output_file
     )
 
 
 @mmdet.command()
-@click.option("--source-config-file", required=True, type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.option("--target-config-file", required=True, type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.option("--output-file", required=True, type=click.Path(exists=False, file_okay=True, dir_okay=False))
-@click.option("--load-source-from", required=False, type=click.Path(exists=True, file_okay=True, dir_okay=False))
-def copy_backbone(source_config_file: str, target_config_file: str, output_file: str, load_source_from: str | None):
+@click.option(
+    "--source-config-file",
+    required=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+)
+@click.option(
+    "--target-config-file",
+    required=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+)
+@click.option(
+    "--output-file", required=True, type=click.Path(exists=False, file_okay=True, dir_okay=False)
+)
+@click.option(
+    "--load-source-from",
+    required=False,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+)
+def copy_backbone(
+    source_config_file: str, target_config_file: str, output_file: str, load_source_from: str | None
+):
     MMDetModels.copy_backbone(
         source_config_file=source_config_file,
         target_config_file=target_config_file,
         load_source_from=load_source_from,
-        output_file=output_file
+        output_file=output_file,
     )
 
 
