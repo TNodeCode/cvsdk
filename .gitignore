@@ -9,7 +9,7 @@ datasets/
 data/
 mmengne/
 mmcv/
-mmpretrain/
+/mmpretrain/
 mmdetection/
 mmsegmentation/
 results/

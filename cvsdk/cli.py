@@ -3,6 +3,7 @@ from cvsdk.model import Dataset, Image, BoundingBox, SegmentationMask
 from cvsdk.model.validation import COCOObjectDetectionValidation
 from cvsdk.cvat.cli import cvat as cvat_cli
 from cvsdk.mmdet.cli import mmdet as mmdet_cli
+from cvsdk.mmpretrain.cli import mmpretrain as mmpretrain_cli
 from cvsdk.yolo.cli import yolo as yolo_cli
 from cvsdk.fiftyone.cli import fiftyone as fo_cli
 from cvsdk.torch.det.cli import torchdet as torchdet_cli
@@ -21,6 +22,7 @@ def cli() -> None:
 
 # Add groups to CLI
 cli.add_command(mmdet_cli)
+cli.add_command(mmpretrain_cli)
 cli.add_command(yolo_cli)
 cli.add_command(fo_cli)
 cli.add_command(cvat_cli)
