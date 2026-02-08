@@ -35,7 +35,15 @@ def detect(
         work_dir (str, optional): Path where checkpoints are stored. Defaults to "./work_dirs".
     """
     config_file_path = f"{work_dir}/{config_file}"
-    epochs = list(range(1, len(glob.glob(f"{work_dir}/epoch_*.pth")) + 1)) if epoch == -1 else [epoch]
+    # Find checkpoints in the work directory matching the expected pattern
+    checkpoint_pattern = f"{work_dir}/epoch_*.pth"
+    available_checkpoints = glob.glob(checkpoint_pattern)
+    if epoch == -1 and available_checkpoints:
+        # Extract epoch numbers from checkpoint filenames
+        epochs = sorted([int(os.path.basename(cp).replace('epoch_', '').replace('.pth', '')) 
+                        for cp in available_checkpoints])
+    else:
+        epochs = [epoch]
 
     logger.info(
         "Configuration",

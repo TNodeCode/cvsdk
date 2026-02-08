@@ -3,6 +3,9 @@ import glob
 import re
 import os
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+from structlog import get_logger
+
+logger = get_logger()
 
 
 def read_csv_predictions_as_df(csv_filepath: str) -> pd.DataFrame:
@@ -107,7 +110,7 @@ def evaluate_training_epochs(
         filename = model_epoch_filename_func(i)
         if not os.path.exists(filename):
             continue
-        print(f"Processing epoch {i} ...")
+        logger.info(f"Processing epoch {i} ...")
         # Read this CSV file
         pred_df = read_csv_predictions_as_df(filename)
         
@@ -156,4 +159,4 @@ def evaluate(
     os.makedirs(os.path.split(results_filename)[0], exist_ok=True)
     
     df_metrics.to_csv(results_filename, index=False)
-    print(f"Evaluation results saved to {results_filename}")
+    logger.info("Evaluation results saved", filename=results_filename)

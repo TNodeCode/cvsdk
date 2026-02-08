@@ -6,6 +6,9 @@ import time
 import subprocess
 import signal
 from torch.utils.tensorboard import SummaryWriter
+from structlog import get_logger
+
+logger = get_logger()
 
 
 def parse_json_log_file(log_file_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -29,8 +32,7 @@ def parse_json_log_file(log_file_path: str) -> tuple[pd.DataFrame, pd.DataFrame]
                 elif 'accuracy' in log_entry or 'loss' in log_entry:
                     eval_logs.append(log_entry)
             except json.JSONDecodeError:
-                print("Warning: Skipping invalid JSON line.")
-                print(line)
+                logger.warning("Skipping invalid JSON line", line=line)
                 continue
 
     batch_df = pd.DataFrame(batch_logs)

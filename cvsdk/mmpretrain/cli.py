@@ -1,6 +1,7 @@
 import signal
 import subprocess
 import sys
+import os
 
 import click
 
@@ -8,9 +9,6 @@ from cvsdk.mmpretrain.board import log_metrics_to_tensorboard, parse_json_log_fi
 from cvsdk.mmpretrain.detect import detect as _detect
 from cvsdk.mmpretrain.eval import evaluate as evaluate
 from cvsdk.mmpretrain.utils import MMPretrainModels
-
-import os
-import sys
 
 sys.path.append(os.path.join(os.getcwd(), "mmpretrain"))
 
