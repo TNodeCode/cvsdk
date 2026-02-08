@@ -50,27 +50,29 @@ weight_decay: 0.05
 momentum: 0.9
 ```
 
+`model_name`must be the file name of one of the configuration files found under `repos/onedl-mmdetection/configs`. You can find some of the available models in the table below.
+
 ## Available models
 
-| model_type | model_name |
-|---|---|
-| faster_rcnn | faster-rcnn_r50_fpn_1x_coco |
-| | faster-rcnn_r101_fpn_1x_coco |
-| | faster-rcnn_x101-32x4d_fpn_1x_coco |
-| | faster-rcnn_x101-64x4d_fpn_1x_coco |
-| cascade_rcnn | cascade-rcnn_r50_fpn_1x_coco |
-| | cascade-rcnn_r101_fpn_1x_coco |
-| | cascade-rcnn_x101-32x4d_fpn_1x_coco |
-| | cascade-rcnn_x101-64x4d_fpn_1x_coco |
-| deformable_detr | deformable-detr_r50_16xb2-50e_coco |
-| | deformable-detr-refine_r50_16xb2-50e_coco |
-| | deformable-detr-refine-twostage_r50_16xb2-50e_coco |
-| yolox | yolox_nano_8xb8-300e_coco |
-| | yolox_tiny_8xb8-300e_coco |
-| | yolox_s_8xb8-300e_coco |
-| | yolox_m_8xb8-300e_coco |
-| | yolox_l_8xb8-300e_coco |
-| | yolox_x_8xb8-300e_coco |
+| model_type      | model_name                                         |
+| --------------- | -------------------------------------------------- |
+| faster_rcnn     | faster-rcnn_r50_fpn_1x_coco                        |
+|                 | faster-rcnn_r101_fpn_1x_coco                       |
+|                 | faster-rcnn_x101-32x4d_fpn_1x_coco                 |
+|                 | faster-rcnn_x101-64x4d_fpn_1x_coco                 |
+| cascade_rcnn    | cascade-rcnn_r50_fpn_1x_coco                       |
+|                 | cascade-rcnn_r101_fpn_1x_coco                      |
+|                 | cascade-rcnn_x101-32x4d_fpn_1x_coco                |
+|                 | cascade-rcnn_x101-64x4d_fpn_1x_coco                |
+| deformable_detr | deformable-detr_r50_16xb2-50e_coco                 |
+|                 | deformable-detr-refine_r50_16xb2-50e_coco          |
+|                 | deformable-detr-refine-twostage_r50_16xb2-50e_coco |
+| yolox           | yolox_nano_8xb8-300e_coco                          |
+|                 | yolox_tiny_8xb8-300e_coco                          |
+|                 | yolox_s_8xb8-300e_coco                             |
+|                 | yolox_m_8xb8-300e_coco                             |
+|                 | yolox_l_8xb8-300e_coco                             |
+|                 | yolox_x_8xb8-300e_coco                             |
 
 ## Train a model
 

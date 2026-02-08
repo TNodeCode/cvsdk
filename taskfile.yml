@@ -32,6 +32,8 @@ tasks:
     cmds:
       - mim uninstall -y onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
       - mim install -U onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
+      - task: mmengine:compile
+      - task: mmcv:compile
     dir: .
 
   onedl:clone:
@@ -43,6 +45,12 @@ tasks:
       - git clone https://github.com/vbti-development/onedl-mmdetection
       - git clone https://github.com/vbti-development/onedl-mmsegmentation
     dir: repos
+
+  mmengine:compile:
+    desc: Compile mmengine with CUDA support (see https://onedl-mmengine.readthedocs.io/en/latest/get_started/build.html)
+    cmds:
+      - uv pip install -e . -v
+    dir: repos/onedl-mmengine
 
   mmcv:compile:
     desc: Compile mmcv with CUDA support (see https://onedl-mmcv.readthedocs.io/en/latest/get_started/build.html)

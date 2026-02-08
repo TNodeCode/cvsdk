@@ -4,10 +4,17 @@
 
 ```bash
 # Create virtual environment
-$ uv venv --python=3.12
+uv venv --python=3.12
 
 # Install dependencies
-$ uv sync
+uv sync
+```
+
+## Install OpenMMLab
+
+```bash
+task onedl:clone
+task mm-install
 ```
 
 ## Activate environment
@@ -16,15 +23,15 @@ Activation:
 
 ```bash
 # MacOS / Linux
-$ source .venv/bin/activate
+source .venv/bin/activate
 
 # Windows
-$ .venv/Scripts/activate
+.venv/Scripts/activate
 ```
 
 Deactivation:
 
 ```bash
 # MacOS / Linux
-$ deactivate
+deactivate
 ```
