@@ -122,7 +122,7 @@ class MMPretrainModels:
         cfg.val_dataloader.batch_size = BATCH_SIZE
         cfg.test_dataloader.batch_size = BATCH_SIZE
         cfg.work_dir = WORK_DIR
-        cfg.resume = True if load_from is None else False
+        cfg.resume = load_from is not None
         return cfg
 
     @staticmethod

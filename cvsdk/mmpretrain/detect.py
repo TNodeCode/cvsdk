@@ -54,9 +54,9 @@ def detect(
     )
 
     predictions = []
-    for epoch in epochs:
-        logger.info(f"Predictions for epoch {epoch} ...")
-        weight_file = f"{work_dir}/epoch_{epoch}.pth"
+    for current_epoch in epochs:
+        logger.info(f"Predictions for epoch {current_epoch} ...")
+        weight_file = f"{work_dir}/epoch_{current_epoch}.pth"
         # Initialize the model
         logger.info("Loading model ...")
         model = init_model(
@@ -83,8 +83,8 @@ def detect(
             if len(batch_files) < 1:
                 continue
             # Send images through model
-            start = time.time()
             for img_file in batch_files:
+                start = time.time()
                 result = inference_model(model, img_file)
                 end = time.time()
                 durations.append(end - start)
@@ -97,7 +97,7 @@ def detect(
                 
                 if pred_score >= score_threshold:
                     predictions.append({
-                        "epoch": epoch,
+                        "epoch": current_epoch,
                         "filename": filename,
                         "pred_label": int(pred_label),
                         "pred_class": str(pred_class),
