@@ -11,7 +11,7 @@ mmengne/
 mmcv/
 /mmpretrain/
 mmdetection/
-mmsegmentation/
+/mmsegmentation/
 results/
 work_dirs/
 tmp/
