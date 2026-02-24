@@ -4,7 +4,7 @@ from mmengine import Config
 from mmengine.runner import Runner
 from mmseg.apis import init_model
 from dynaconf import Dynaconf
-from cvsdk.mmsegmentation.config import TrainingConfig
+from cvsdk.mm.segmentation.config import TrainingConfig
 from collections import OrderedDict
 from rich.pretty import pprint
 from structlog import get_logger

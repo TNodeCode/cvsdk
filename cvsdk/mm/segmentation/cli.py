@@ -4,10 +4,10 @@ import sys
 
 import click
 
-from cvsdk.mmsegmentation.board import log_metrics_to_tensorboard, parse_json_log_file
-from cvsdk.mmsegmentation.detect import detect as _detect
-from cvsdk.mmsegmentation.eval import evaluate as evaluate
-from cvsdk.mmsegmentation.utils import MMSegModels
+from cvsdk.mm.segmentation.board import log_metrics_to_tensorboard, parse_json_log_file
+from cvsdk.mm.segmentation.detect import detect as _detect
+from cvsdk.mm.segmentation.eval import evaluate as evaluate
+from cvsdk.mm.segmentation.utils import MMSegModels
 
 import os
 import sys

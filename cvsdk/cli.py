@@ -2,9 +2,9 @@ from cvsdk.format.coco import CocoExporter, CocoImporter
 from cvsdk.model import Dataset, Image, BoundingBox, SegmentationMask
 from cvsdk.model.validation import COCOObjectDetectionValidation
 from cvsdk.cvat.cli import cvat as cvat_cli
-from cvsdk.mmdet.cli import mmdet as mmdet_cli
-from cvsdk.mmpretrain.cli import mmpretrain as mmpretrain_cli
-from cvsdk.mmsegmentation.cli import mmseg as mmseg_cli
+from cvsdk.mm.det.cli import mmdet as mmdet_cli
+from cvsdk.mm.pretrain.cli import mmpretrain as mmpretrain_cli
+from cvsdk.mm.segmentation.cli import mmseg as mmseg_cli
 from cvsdk.yolo.cli import yolo as yolo_cli
 from cvsdk.fiftyone.cli import fiftyone as fo_cli
 from cvsdk.torch.det.cli import torchdet as torchdet_cli

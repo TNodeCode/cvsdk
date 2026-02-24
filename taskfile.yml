@@ -17,24 +17,8 @@ tasks:
     desc: Install all necessary dependencies
     cmds:
       - uv sync
-      - task: install-mm
-
-  download-mmd:
-    desc: Download the mmdetection repository
-    cmds:
-      - git clone https://github.com/open-mmlab/mmpretrain
-      - git clone https://github.com/open-mmlab/mmdetection.git
-      - git clone https://github.com/open-mmlab/mmsegmentation
-    dir: .
-  
-  install-mm:
-    desc: Install the mmdetection library
-    cmds:
-      - mim uninstall -y onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
-      - mim install -U onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
-      - task: mmengine:compile
-      - task: mmcv:compile
-    dir: .
+      - task: onedl:clone
+      - task: onedl:install
 
   onedl:clone:
     desc: Clone the onedl repositories
@@ -45,6 +29,15 @@ tasks:
       - git clone https://github.com/vbti-development/onedl-mmdetection
       - git clone https://github.com/vbti-development/onedl-mmsegmentation
     dir: repos
+  
+  onedl:install:
+    desc: Install the mmdetection library
+    cmds:
+      #- mim uninstall -y onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
+      #- mim install -U onedl-mmengine onedl-mmcv onedl-mmpretrain onedl-mmdetection onedl-mmsegmentation
+      #- task: mmengine:compile
+      - task: mmcv:compile
+    dir: .
 
   mmengine:compile:
     desc: Compile mmengine with CUDA support (see https://onedl-mmengine.readthedocs.io/en/latest/get_started/build.html)

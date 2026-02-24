@@ -5,10 +5,10 @@ import os
 
 import click
 
-from cvsdk.mmpretrain.board import log_metrics_to_tensorboard, parse_json_log_file
-from cvsdk.mmpretrain.detect import detect as _detect
-from cvsdk.mmpretrain.eval import evaluate as evaluate
-from cvsdk.mmpretrain.utils import MMPretrainModels
+from cvsdk.mm.pretrain.board import log_metrics_to_tensorboard, parse_json_log_file
+from cvsdk.mm.pretrain.detect import detect as _detect
+from cvsdk.mm.pretrain.eval import evaluate as evaluate
+from cvsdk.mm.pretrain.utils import MMPretrainModels
 
 sys.path.append(os.path.join(os.getcwd(), "mmpretrain"))
 

@@ -4,13 +4,13 @@ from mmengine import Config
 from mmengine.runner import Runner
 from mmdet.apis import init_detector
 from dynaconf import Dynaconf
-from cvsdk.mmdet.config import TrainingConfig
+from cvsdk.mm.det.config import TrainingConfig
 from collections import OrderedDict
 from rich.pretty import pprint
 from structlog import get_logger
-from cvsdk.mmdet.backbones import *
-from cvsdk.mmdet.necks import *
-from cvsdk.mmdet.vitdet.vitdet import *
+from cvsdk.mm.det.backbones import *
+from cvsdk.mm.det.necks import *
+from cvsdk.mm.det.vitdet.vitdet import *
 
 logger = get_logger()
 

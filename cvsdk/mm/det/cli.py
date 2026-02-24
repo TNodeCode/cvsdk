@@ -4,15 +4,13 @@ import sys
 
 import click
 
-from cvsdk.mmdet.board import log_metrics_to_tensorboard, parse_json_log_file
-from cvsdk.mmdet.detect import detect as _detect
-from cvsdk.mmdet.eval import evaluate as evaluate
-from cvsdk.mmdet.utils import MMDetModels
+from cvsdk.mm.det.board import log_metrics_to_tensorboard, parse_json_log_file
+from cvsdk.mm.det.detect import detect as _detect
+from cvsdk.mm.det.eval import evaluate as evaluate
+from cvsdk.mm.det.utils import MMDetModels
 
 import os
 import sys
-
-sys.path.append(os.path.join(os.getcwd(), "mmdetection"))
 
 
 @click.group()
