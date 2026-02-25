@@ -27,6 +27,12 @@ tasks:
       - task: mmcv:compile
     dir: .
 
+  onedl:mmcv:wheel:
+    desc: Build a wheel for mmcv
+    cmds:
+      - python -m build --wheel
+    dir: repos/onedl-mmcv
+
   mmengine:compile:
     desc: Compile mmengine with CUDA support (see https://onedl-mmengine.readthedocs.io/en/latest/get_started/build.html)
     cmds:

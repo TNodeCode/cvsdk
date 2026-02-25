@@ -2,6 +2,7 @@ import signal
 import subprocess
 import sys
 import os
+import pathlib
 
 import click
 
@@ -10,7 +11,7 @@ from cvsdk.mm.pretrain.detect import detect as _detect
 from cvsdk.mm.pretrain.eval import evaluate as evaluate
 from cvsdk.mm.pretrain.utils import MMPretrainModels
 
-sys.path.append(os.path.join(os.getcwd(), "mmpretrain"))
+sys.path.append(os.path.join(os.getcwd(), "repos", "onedl-mmdetection"))
 
 
 @click.group()

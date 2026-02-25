@@ -9,10 +9,6 @@ from cvsdk.mm.det.detect import detect as _detect
 from cvsdk.mm.det.eval import evaluate as evaluate
 from cvsdk.mm.det.utils import MMDetModels
 
-import os
-import sys
-
-
 @click.group()
 def mmdet():
     """CLI for training and managing a MMDet model on a custom dataset."""
