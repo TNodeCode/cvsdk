@@ -1,19 +1,7 @@
 version: "3"
 
 tasks:
-  setup:
-    desc: Setup project
-    cmds:
-      - task: venv
-      - task: download-mm
-      - task: sync
-
-  venv:
-    desc: Create virtual environment
-    cmds:
-      - uv venv --python 3.12
-
-  sync:
+  install:
     desc: Install all necessary dependencies
     cmds:
       - uv sync
