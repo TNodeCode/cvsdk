@@ -173,7 +173,7 @@ class MMDetModels:
         cfg.model.backbone.num_heads = config.backbone.num_heads
         cfg.model.backbone.patch_size = config.backbone.patch_size
         cfg.model.backbone.window_size = config.backbone.window_size
-        cfg.model.neck.out_channel = config.backbone.neck_out_channels
+        cfg.model.neck.out_channels = config.backbone.neck_out_channels
       cfg.model.neck.out_channels=config.detr_encoder.embed_dims
       cfg.model.bbox_head[0].num_classes=NUM_CLASSES
       cfg.model.bbox_head[0].in_channels=config.detr_encoder.embed_dims
