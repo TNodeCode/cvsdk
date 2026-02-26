@@ -416,8 +416,7 @@ class ViT(BaseModule):
     def _freeze(self):
         for param in self.patch_embed.parameters():
             param.requires_grad = False
-        for param in self.pos_embed.parameters():
-            param.requires_grad = False
+        self.pos_embed.requires_grad = False
         for param in self.blocks.parameters():
             param.requires_grad = False
 
