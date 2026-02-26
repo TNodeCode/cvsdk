@@ -364,7 +364,9 @@ class ViT(BaseModule):
                  window_block_indexes=(0, 1, 3, 4, 6, 7, 9, 10),
                  pretrain_img_size=224,
                  pretrain_use_cls_token=True,
-                 init_cfg=None):
+                 init_cfg=None,
+                 finetuning=False
+                ):
 
         super().__init__()
         self.pretrain_use_cls_token = pretrain_use_cls_token
@@ -407,6 +409,18 @@ class ViT(BaseModule):
         if self.pos_embed is not None:
             nn.init.trunc_normal_(self.pos_embed, std=0.02)
 
+        self.finetuning = finetuning
+        if not finetuning:
+            self._freeze()
+
+    def _freeze(self):
+        for param in self.patch_embed.parameters():
+            param.requires_grad = False
+        for param in self.pos_embed.parameters():
+            param.requires_grad = False
+        for param in self.blocks.parameters():
+            param.requires_grad = False
+
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             nn.init.trunc_normal_(m.weight, std=0.02)
@@ -434,6 +448,8 @@ class ViT(BaseModule):
                 _state_dict = ckpt['state_dict']
 
             self.load_state_dict(_state_dict, False)
+        if not self.finetuning:
+            self._freeze()
 
     def forward(self, x):
         x = self.patch_embed(x)

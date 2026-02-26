@@ -1,5 +1,6 @@
 from cvsdk.model import Dataset, Image, BoundingBox, SegmentationMask, PanopticSegment
 import json
+import structlog
 
 
 class CocoLoader:
@@ -7,7 +8,15 @@ class CocoLoader:
 
     @staticmethod
     def import_dataset(json_path: str, task_type: str) -> Dataset:
-        """Load a COCO JSON file and return a Dataset model."""
+        """Import a COCO Dataset
+
+        Args:
+            json_path (str): path to the COCO json annotation file
+            task_type (str): task type
+
+        Returns:
+            Dataset: _description_
+        """
         with open(json_path, "r") as f:
             coco_data = json.load(f)
 
@@ -27,15 +36,18 @@ class CocoLoader:
         if task_type == "detection" or task_type == "segmentation":
             for ann in coco_data["annotations"]:
                 if "bbox" in ann:
-                    bbox = BoundingBox(
-                        xmin=ann["bbox"][0],
-                        ymin=ann["bbox"][1],
-                        width=ann["bbox"][2],
-                        height=ann["bbox"][3],
-                        category_id=ann["category_id"],
-                        id=ann["id"]
-                    )
-                    images[ann["image_id"]].bounding_boxes.append(bbox)
+                    try:
+                        bbox = BoundingBox(
+                            xmin=ann["bbox"][0],
+                            ymin=ann["bbox"][1],
+                            width=ann["bbox"][2],
+                            height=ann["bbox"][3],
+                            category_id=ann["category_id"],
+                            id=ann["id"]
+                        )
+                        images[ann["image_id"]].bounding_boxes.append(bbox)
+                    except Exception as e:
+                        structlog.get_logger().warning(f"Failed to parse bounding box: {e}")
 
                 if "segmentation" in ann and ann["segmentation"]:
                     mask = SegmentationMask(

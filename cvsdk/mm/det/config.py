@@ -36,6 +36,8 @@ class VisionTransformerBackboneConfig(BaseModel):
     num_heads: int = 8
     patch_size: int = 16
     window_size: int = 16
+    neck_dim: int = 256
+    finetuning: bool = True
 
 
 class DetrTransformerEncoderConfig(BaseModel):
