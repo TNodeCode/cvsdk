@@ -166,7 +166,12 @@ class MMDetModels:
         act_cfg=dict(type='ReLU', inplace=True),
       )
       if cfg.model.backbone.type == "ViT":
+        cfg.model.backbone.embed_dim = config.backbone.embed_dims
+        cfg.model.neck.backbone_channel = config.backbone.embed_dims
         cfg.model.neck.in_channels = [config.backbone.embed_dims // 4, config.backbone.embed_dims // 2, config.backbone.embed_dims, config.backbone.embed_dims]
+        cfg.model.backbone.num_heads = config.backbone.num_heads
+        cfg.model.backbone.patch_size = config.backbone.patch_size
+        cfg.model.backbone.window_size = config.backbone.window_size
       cfg.model.neck.out_channels=config.detr_encoder.embed_dims
       cfg.model.bbox_head[0].num_classes=NUM_CLASSES
       cfg.model.bbox_head[0].in_channels=config.detr_encoder.embed_dims

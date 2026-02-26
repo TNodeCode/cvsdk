@@ -33,6 +33,9 @@ class SwinTransformerBackboneConfig(BaseModel):
 class VisionTransformerBackboneConfig(BaseModel):
     type: Literal["VisionTransformer"] = "VisionTransformer"
     embed_dims: int = 192
+    num_heads: int = 8
+    patch_size: int = 16
+    window_size: int = 16
 
 
 class DetrTransformerEncoderConfig(BaseModel):
