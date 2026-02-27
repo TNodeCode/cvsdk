@@ -147,23 +147,27 @@ class YOLOLoader:
 
             elif dataset.task_type == "detection":
                 for box in image.bounding_boxes:
-                    cx = box.xmin + box.width / 2
-                    cy = box.ymin + box.height / 2
-                    lines.append(f"{box.category_id} {cx} {cy} {box.width} {box.height}")
+                    cx = (box.xmin + box.width / 2) / image.width
+                    cy = (box.ymin + box.height / 2) / image.height
+                    w = box.width / image.width
+                    h = box.height / image.height
+                    lines.append(f"{box.category_id} {cx} {cy} {w} {h}")
 
             elif dataset.task_type == "segmentation":
                 for mask in image.segmentation_masks:
-                    # Flatten the polygon
-                    flat_seg = " ".join(str(int(p)) for p in mask.segmentation[0])
+                    # Flatten the polygon (normalized coordinates)
+                    flat_seg = " ".join(str(p / image.width if i % 2 == 0 else p / image.height for i, p in enumerate(mask.segmentation[0])))
                     # Find the corresponding bbox
                     bbox = next(
                         (b for b in image.bounding_boxes if b.category_id == mask.category_id),
                         None
                     )
                     if bbox:
-                        cx = bbox.xmin + bbox.width / 2
-                        cy = bbox.ymin + bbox.height / 2
-                        lines.append(f"{mask.category_id} {cx} {cy} {bbox.width} {bbox.height} {flat_seg}")
+                        cx = (bbox.xmin + bbox.width / 2) / image.width
+                        cy = (bbox.ymin + bbox.height / 2) / image.height
+                        w = bbox.width / image.width
+                        h = bbox.height / image.height
+                        lines.append(f"{mask.category_id} {cx} {cy} {w} {h} {flat_seg}")
 
             elif dataset.task_type == "panoptic":
                 for segment in image.panoptic_segments:
@@ -171,9 +175,11 @@ class YOLOLoader:
 
             elif dataset.task_type == "tracking":
                 for box in image.bounding_boxes:
-                    cx = box.xmin + box.width / 2
-                    cy = box.ymin + box.height / 2
-                    lines.append(f"{box.category_id} {box.id} {cx} {cy} {box.width} {box.height}")
+                    cx = (box.xmin + box.width / 2) / image.width
+                    cy = (box.ymin + box.height / 2) / image.height
+                    w = box.width / image.width
+                    h = box.height / image.height
+                    lines.append(f"{box.category_id} {box.id} {cx} {cy} {w} {h}")
 
             with open(label_file, "w") as f:
                 f.write("\n".join(lines))
