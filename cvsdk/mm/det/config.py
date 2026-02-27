@@ -41,6 +41,11 @@ class VisionTransformerBackboneConfig(BaseModel):
     finetuning: bool = True
 
 
+class DINOv3BackboneConfig(BaseModel):
+    type: Literal["DINOv3"] = "DINOv3"
+    finetuning: bool = True
+
+
 class DetrTransformerEncoderConfig(BaseModel):
     type: Literal["DetrTransformerEncoder"] = "DetrTransformerEncoder"
     num_layers: int = 6
@@ -67,7 +72,7 @@ class TrainingConfig(BaseModel):
     config_path: str
     model_type: str
     model_name: str
-    backbone: ResNetBackboneConfig | EfficientNetBackboneConfig | MyBackboneConfig | SwinTransformerBackboneConfig | VisionTransformerBackboneConfig | None
+    backbone: ResNetBackboneConfig | EfficientNetBackboneConfig | MyBackboneConfig | SwinTransformerBackboneConfig | VisionTransformerBackboneConfig | DINOv3BackboneConfig | None
     detr_encoder: DetrTransformerEncoderConfig = DetrTransformerEncoderConfig()
     detr_decoder: DetrTransformerDecoderConfig = DetrTransformerDecoderConfig()
     dataset_dir: str

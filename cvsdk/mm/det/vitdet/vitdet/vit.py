@@ -460,5 +460,5 @@ class ViT(BaseModule):
             x = blk(x)
 
         x = x.permute(0, 3, 1, 2)
-
+        # return tensor of shape (B, C, H, W)
         return x

@@ -175,6 +175,8 @@ class MMDetModels:
         cfg.model.neck.backbone_channel = config.backbone.embed_dims
         cfg.model.neck.in_channels = [config.backbone.embed_dims // 4, config.backbone.embed_dims // 2, config.backbone.embed_dims, config.backbone.embed_dims]
         cfg.model.neck.out_channels = config.backbone.neck_out_channels
+      elif cfg.model.backbone.type == "DINOv3":
+        cfg.model.backbone.finetuning = config.backbone.finetuning
       cfg.model.neck.out_channels=config.detr_encoder.embed_dims
       cfg.model.bbox_head[0].num_classes=NUM_CLASSES
       cfg.model.bbox_head[0].in_channels=config.detr_encoder.embed_dims
