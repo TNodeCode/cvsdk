@@ -15,13 +15,40 @@ def fiftyone() -> None:
 @click.option('--root-dir', type=click.Path(exists=True), required=True, help='Root directory containing images and annotations')
 @click.option('--annotations', type=str, required=True, help='COCO JSON annotation file')
 @click.option('--images', type=str, required=True, help='Directory where images are stored')
-def show(root_dir: str, annotations: str, images: str) -> None:
-    """Starts a FiftyOne application to inspect a computer vision object detection dataset."""
+def show_coco(root_dir: str, annotations: str, images: str) -> None:
+    """Starts a FiftyOne application to inspect a COCO object detection dataset."""
     # Load the COCO dataset into FiftyOne
     dataset = fo.Dataset.from_dir(
         dataset_type=fo.types.COCODetectionDataset,
         data_path=os.path.join(root_dir, images),
         labels_path=os.path.join(root_dir, annotations),
+    )
+
+    # Launch FiftyOne app
+    session = fo.launch_app(dataset)
+
+    print("FiftyOne app is running. Press CTRL-C to stop.")
+
+    try:
+        # Keep the script running until CTRL-C is pressed
+        session.wait()
+    except KeyboardInterrupt:
+        print("\nSession terminated by user.")
+
+
+@fiftyone.command()
+@click.option('--root-dir', type=click.Path(exists=True), required=True, help='Root directory containing images and annotations')
+@click.option('--images', type=str, required=True, help='Directory where images are stored')
+@click.option('--labels', type=str, required=True, help='YOLO labels directory (relative to root-dir)')
+@click.option('--classes', type=str, required=True, help='Path to classes.txt file (relative to root-dir)')
+def show_yolo(root_dir: str, images: str, labels: str, classes: str) -> None:
+    """Starts a FiftyOne application to inspect a YOLO object detection dataset."""
+    # Load the YOLO dataset into FiftyOne
+    dataset = fo.Dataset.from_dir(
+        dataset_type=fo.types.YOLOv4Dataset,
+        data_path=os.path.join(root_dir, images),
+        labels_path=os.path.join(root_dir, labels),
+        classes_path=os.path.join(root_dir, classes),
     )
 
     # Launch FiftyOne app
