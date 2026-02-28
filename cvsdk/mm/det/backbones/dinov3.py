@@ -13,8 +13,8 @@ class DINOv3ViTBackbone(nn.Module):
         self.finetuning = finetuning
         self.config = DINOv3ViTConfig()
         self.model = DINOv3ViTModel(self.config)
-        print(self.model)
-        self._freeze()
+        if not self.finetuning:
+            self._freeze()
 
 
     def _freeze(self):
