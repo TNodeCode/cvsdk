@@ -90,5 +90,6 @@ class TrainingConfig(BaseModel):
     lr: float
     weight_decay: float
     momentum: float
-    augmentations: list[dict]
+    train_augmentations: list[dict]
+    val_augmentations: list[dict]
 

@@ -96,10 +96,27 @@ class MMDetModels:
       dict(type='LoadAnnotations', with_bbox=True),
     ]
 
-    train_pipeline += config.augmentations
+    train_pipeline += config.train_augmentations
 
     train_pipeline += [
       dict(type='PackDetInputs')
+    ]
+
+    val_pipeline = [
+      dict(type='LoadImageFromFile', backend_args=None),
+    ]
+    val_pipeline += config.val_augmentations
+    val_pipeline += [
+      dict(type='LoadAnnotations', with_bbox=True),
+      dict(
+        meta_keys=(
+          'img_id',
+          'img_path',
+          'ori_shape',
+          'img_shape',
+          'scale_factor',
+        ),
+        type='PackDetInputs'),
     ]
 
     if MODEL_TYPE == "yolox":
@@ -118,6 +135,7 @@ class MMDetModels:
     cfg.val_dataloader.dataset.data_root=DATASET_DIR
     cfg.val_dataloader.dataset.data_prefix.img=f"{config.val_dir}/"
     cfg.val_dataloader.dataset.ann_file=f"{ANN_VAL}"
+    cfg.val_dataloader.dataset.pipeline=val_pipeline
     cfg.val_evaluator.ann_file=f"{DATASET_DIR}{ANN_VAL}"
     cfg.val_dataloader.dataset.update({'metainfo': {'classes': DATASET_CLASSES}})
     cfg.test_dataloader.dataset.data_root=DATASET_DIR
