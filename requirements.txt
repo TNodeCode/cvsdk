@@ -1,7 +1,0 @@
-numpy==1.23.1
-pandas
-ultralytics
-supervision
-streamlit
-fiftyone
-pycocotools

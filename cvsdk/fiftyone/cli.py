@@ -64,6 +64,40 @@ def show_yolo(root_dir: str, images: str, labels: str, classes: str) -> None:
 
 
 @fiftyone.command()
+@click.option('--root-dir', type=click.Path(exists=True), required=True, help='Root directory containing class subdirectories')
+def show_image_folder(root_dir: str) -> None:
+    """Starts a FiftyOne application to inspect a image folder classification dataset.
+    
+    The dataset should have the following structure:
+        root-dir/
+            class1/
+                image1.jpg
+                image2.jpg
+            class2/
+                image3.jpg
+    
+    Class names are automatically derived from subdirectory names.
+    """
+    # Load the YOLO classification dataset into FiftyOne
+    # Labels are inferred from subdirectory names
+    dataset = fo.Dataset.from_dir(
+        dataset_type=fo.types.ImageClassificationDirectoryTree,
+        dataset_dir=root_dir,
+    )
+
+    # Launch FiftyOne app
+    session = fo.launch_app(dataset)
+
+    print("FiftyOne app is running. Press CTRL-C to stop.")
+
+    try:
+        # Keep the script running until CTRL-C is pressed
+        session.wait()
+    except KeyboardInterrupt:
+        print("\nSession terminated by user.")
+
+
+@fiftyone.command()
 @click.option('--root-dir', type=click.Path(exists=True), required=True,
               help='Root directory containing images and annotations')
 @click.option('--annotations', type=str, required=True,
