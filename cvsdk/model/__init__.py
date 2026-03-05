@@ -84,6 +84,7 @@ class Dataset(BaseModel):
     images: List[Image]
     categories: Dict[int, str]
     task_type: str  # "detection", "segmentation", "panoptic", "classification"
+    split_map: Optional[Dict[int, str]] = None  # Optional mapping of image_id to split (train/val/test)
 
     @model_validator(mode='after')
     @classmethod

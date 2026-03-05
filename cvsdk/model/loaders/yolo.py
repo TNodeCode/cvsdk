@@ -1,20 +1,46 @@
 import os
-from typing import List
+from typing import List, Optional
 from pathlib import Path
+from PIL import Image as PILImage
 from cvsdk.model import Image, BoundingBox, SegmentationMask, PanopticSegment, Dataset
+
+
+def _get_image_dimensions(img_path: Path) -> tuple:
+    """Get image dimensions using PIL.
+    
+    Args:
+        img_path: Path to the image file.
+        
+    Returns:
+        Tuple of (width, height).
+    """
+    try:
+        with PILImage.open(img_path) as img:
+            return img.size  # (width, height)
+    except Exception:
+        return (0, 0)
 
 
 class YOLOLoader:
     """YOLO dataset import and export.
     """
     @staticmethod
-    def import_dataset(yolo_root: str, task_type: str) -> Dataset:
+    def import_dataset(
+        yolo_root: str,
+        task_type: str,
+        train_dir: Optional[str] = None,
+        val_dir: Optional[str] = None,
+        test_dir: Optional[str] = None
+    ) -> Dataset:
         """
         Import a YOLO-format dataset into the Dataset Pydantic model.
 
         Args:
             yolo_root (str): Path to YOLO dataset root.
             task_type (str): Task type: 'classification', 'detection', 'segmentation', 'panoptic', 'tracking'.
+            train_dir (Optional[str]): Custom directory name for training split. Defaults to 'train'.
+            val_dir (Optional[str]): Custom directory name for validation split. Defaults to 'val'.
+            test_dir (Optional[str]): Custom directory name for test split. Defaults to 'test'.
 
         Returns:
             Dataset: Parsed dataset object.
@@ -22,99 +48,147 @@ class YOLOLoader:
         images = []
         categories = {}
         image_id = 0
+        split_map = {}  # Maps image_id to split name (train/val/test)
 
-        image_dir = Path(yolo_root) / "images"
-        label_dir = Path(yolo_root) / "labels"
-        mask_dir = Path(yolo_root) / "masks" if task_type == "panoptic" else None
+        # Use custom directory names if provided, otherwise defaults
+        split_dirs = {
+            'train': train_dir if train_dir else 'train',
+            'val': val_dir if val_dir else 'val',
+            'test': test_dir if test_dir else 'test'
+        }
 
-        for split in ['train', 'val', 'test']:
-            for img_path in (image_dir / split).glob("*.*"):
-                file_name = str(img_path.relative_to(yolo_root))
-                label_path = label_dir / split / (img_path.stem + ".txt")
+        if task_type == "classification":
+            # Classification: directory structure is root/train/class_name, root/val/class_name, etc.
+            # No "images" or "labels" directories - class directories are directly under split directories
+            for split, split_dir in split_dirs.items():
+                split_path = Path(yolo_root) / split_dir
+                if not split_path.exists():
+                    continue
+                
+                # Each subdirectory represents a class
+                for class_dir in split_path.iterdir():
+                    if not class_dir.is_dir():
+                        continue
+                    
+                    class_name = class_dir.name
+                    # Use class index based on existing categories or assign new one
+                    class_id = len(categories)
+                    categories[class_id] = class_name
+                    
+                    # Get all image files in the class directory
+                    for img_path in class_dir.glob("*.*"):
+                        if img_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp']:
+                            file_name = str(img_path.relative_to(yolo_root))
+                            width, height = _get_image_dimensions(img_path)
+                            
+                            image = Image(
+                                id=image_id,
+                                file_name=file_name,
+                                width=width,
+                                height=height,
+                            )
+                            image.labels.append(class_id)
+                            
+                            images.append(image)
+                            split_map[image_id] = split
+                            image_id += 1
+        else:
+            # Detection, segmentation, panoptic, tracking: standard YOLO structure with images/labels
+            image_dir = Path(yolo_root) / "images"
+            label_dir = Path(yolo_root) / "labels"
+            mask_dir = Path(yolo_root) / "masks" if task_type == "panoptic" else None
 
-                image = Image(
-                    id=image_id,
-                    file_name=file_name,
-                    width=0,  # You could use PIL.Image.open(img_path).size here
-                    height=0,
-                )
+            for split, split_dir in split_dirs.items():
+                split_image_dir = image_dir / split_dir
+                if not split_image_dir.exists():
+                    continue
+                    
+                for img_path in split_image_dir.glob("*.*"):
+                    file_name = str(img_path.relative_to(yolo_root))
+                    label_path = label_dir / split_dir / (img_path.stem + ".txt")
+                    width, height = _get_image_dimensions(img_path)
 
-                if label_path.exists():
-                    with open(label_path) as f:
-                        for line in f:
-                            parts = list(map(float, line.strip().split()))
-                            class_id = int(parts[0])
-                            categories[class_id] = categories.get(class_id, f"class_{class_id}")
+                    image = Image(
+                        id=image_id,
+                        file_name=file_name,
+                        width=width,
+                        height=height,
+                    )
 
-                            if task_type == "classification":
-                                image.labels.append(class_id)
+                    if label_path.exists():
+                        with open(label_path) as f:
+                            for line in f:
+                                parts = list(map(float, line.strip().split()))
+                                class_id = int(parts[0])
+                                categories[class_id] = categories.get(class_id, f"class_{class_id}")
 
-                            elif task_type == "detection":
-                                cx, cy, w, h = parts[1:]
-                                xmin = cx - w / 2
-                                ymin = cy - h / 2
-                                image.bounding_boxes.append(
-                                    BoundingBox(
-                                        xmin=xmin,
-                                        ymin=ymin,
-                                        width=w,
-                                        height=h,
-                                        category_id=class_id
+                                if task_type == "detection":
+                                    cx, cy, w, h = parts[1:]
+                                    xmin = cx - w / 2
+                                    ymin = cy - h / 2
+                                    image.bounding_boxes.append(
+                                        BoundingBox(
+                                            xmin=xmin,
+                                            ymin=ymin,
+                                            width=w,
+                                            height=h,
+                                            category_id=class_id
+                                        )
                                     )
-                                )
 
-                            elif task_type == "segmentation":
-                                cx, cy, w, h, *seg = parts[1:]
-                                image.bounding_boxes.append(
-                                    BoundingBox(
-                                        xmin=cx - w / 2,
-                                        ymin=cy - h / 2,
-                                        width=w,
-                                        height=h,
-                                        category_id=class_id
+                                elif task_type == "segmentation":
+                                    cx, cy, w, h, *seg = parts[1:]
+                                    image.bounding_boxes.append(
+                                        BoundingBox(
+                                            xmin=cx - w / 2,
+                                            ymin=cy - h / 2,
+                                            width=w,
+                                            height=h,
+                                            category_id=class_id
+                                        )
                                     )
-                                )
-                                polygons = [seg]  # In YOLO-seg each object has one polygon
-                                image.segmentation_masks.append(
-                                    SegmentationMask(
-                                        segmentation=polygons,
-                                        category_id=class_id
+                                    polygons = [seg]  # In YOLO-seg each object has one polygon
+                                    image.segmentation_masks.append(
+                                        SegmentationMask(
+                                            segmentation=polygons,
+                                            category_id=class_id
+                                        )
                                     )
-                                )
 
-                            elif task_type == "panoptic":
-                                # For panoptic, polygon segmentation and mask paths are in separate files
-                                # Could be something like: `class_id mask_path`
-                                mask_path = parts[1]
-                                image.panoptic_segments.append(
-                                    PanopticSegment(
-                                        segment_id=len(image.panoptic_segments),
-                                        category_id=class_id,
-                                        mask=mask_path
+                                elif task_type == "panoptic":
+                                    # For panoptic, polygon segmentation and mask paths are in separate files
+                                    # Could be something like: `class_id mask_path`
+                                    mask_path = parts[1]
+                                    image.panoptic_segments.append(
+                                        PanopticSegment(
+                                            segment_id=len(image.panoptic_segments),
+                                            category_id=class_id,
+                                            mask=mask_path
+                                        )
                                     )
-                                )
 
-                            elif task_type == "tracking":
-                                # YOLO tracking: class_id track_id cx cy w h
-                                track_id = int(parts[1])
-                                cx, cy, w, h = parts[2:]
-                                xmin = cx - w / 2
-                                ymin = cy - h / 2
-                                image.bounding_boxes.append(
-                                    BoundingBox(
-                                        xmin=xmin,
-                                        ymin=ymin,
-                                        width=w,
-                                        height=h,
-                                        category_id=class_id,
-                                        id=track_id
+                                elif task_type == "tracking":
+                                    # YOLO tracking: class_id track_id cx cy w h
+                                    track_id = int(parts[1])
+                                    cx, cy, w, h = parts[2:]
+                                    xmin = cx - w / 2
+                                    ymin = cy - h / 2
+                                    image.bounding_boxes.append(
+                                        BoundingBox(
+                                            xmin=xmin,
+                                            ymin=ymin,
+                                            width=w,
+                                            height=h,
+                                            category_id=class_id,
+                                            id=track_id
+                                        )
                                     )
-                                )
 
-                images.append(image)
-                image_id += 1
+                    images.append(image)
+                    split_map[image_id] = split
+                    image_id += 1
 
-        return Dataset(images=images, categories=categories, task_type=task_type)
+        return Dataset(images=images, categories=categories, task_type=task_type, split_map=split_map if split_map else None)
 
     @staticmethod
     def export_dataset(dataset: Dataset, output_dir: str):

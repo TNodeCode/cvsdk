@@ -1,4 +1,5 @@
 from cvsdk.model import Dataset, Image, BoundingBox, SegmentationMask, PanopticSegment
+from pathlib import Path
 import json
 import structlog
 
@@ -139,13 +140,57 @@ class CocoLoader:
 
     @staticmethod
     def export_dataset(dataset: Dataset, output_path: str) -> None:
-        """Export dataset to COCO file.
+        """Export dataset to COCO file(s).
+
+        If output_path is a directory, creates the standard COCO annotation directory structure:
+            output_path/annotations/instances_train.json
+            output_path/annotations/instances_val.json
+            output_path/annotations/instances_test.json
+        
+        If output_path is a file path, creates a single COCO JSON file (legacy behavior).
 
         Args:
             dataset (Dataset): the dataset that should be exported
-            output_path (str): the path to the coco file
+            output_path (str): the path to the coco file or directory
         """
-        coco_dict = CocoLoader.to_coco_dict(dataset);
-        with open(output_path, "w") as f:
-            json.dump(coco_dict, f, indent=4)
+        output_path = Path(output_path)
+        
+        # Check if output_path is a directory or if we should create the standard structure
+        # Standard COCO structure: annotations/instances_{split}.json
+        if dataset.split_map:
+            # Group images by split
+            split_images = {}
+            for img in dataset.images:
+                split = dataset.split_map.get(img.id, 'train')  # Default to 'train' if not specified
+                if split not in split_images:
+                    split_images[split] = []
+                split_images[split].append(img)
+            
+            # Create annotations directory
+            annotations_dir = output_path / "annotations"
+            annotations_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Export each split
+            for split, images in split_images.items():
+                # Create a subset dataset with only images from this split
+                split_dataset = Dataset(
+                    images=images,
+                    categories=dataset.categories,
+                    task_type=dataset.task_type,
+                    split_map=None
+                )
+                coco_dict = CocoLoader.to_coco_dict(split_dataset)
+                
+                # Use standard COCO naming: instances_train2017.json, instances_val2017.json, etc.
+                # For simplicity, we'll use: instances_train.json, instances_val.json, instances_test.json
+                split_file_name = f"instances_{split}.json"
+                output_file = annotations_dir / split_file_name
+                
+                with open(output_file, "w") as f:
+                    json.dump(coco_dict, f, indent=4)
+        else:
+            # Legacy behavior: single file
+            coco_dict = CocoLoader.to_coco_dict(dataset)
+            with open(output_path, "w") as f:
+                json.dump(coco_dict, f, indent=4)
 
