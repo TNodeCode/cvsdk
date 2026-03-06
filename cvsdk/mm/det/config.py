@@ -46,6 +46,13 @@ class DINOv3BackboneConfig(BaseModel):
     finetuning: bool = True
 
 
+class LightlyDINOv2BackboneConfig(BaseModel):
+    type: Literal["LightlyDINOv2"] = "LightlyDINOv2"
+    model_name: Literal["vits14", "vitb14", "vitl14", "vitg14"] = "vits14"
+    checkpoint: str | None = None
+    finetuning: bool = True
+
+
 class DetrTransformerEncoderConfig(BaseModel):
     type: Literal["DetrTransformerEncoder"] = "DetrTransformerEncoder"
     num_layers: int = 6
@@ -72,7 +79,7 @@ class TrainingConfig(BaseModel):
     config_path: str
     model_type: str
     model_name: str
-    backbone: ResNetBackboneConfig | EfficientNetBackboneConfig | MyBackboneConfig | SwinTransformerBackboneConfig | VisionTransformerBackboneConfig | DINOv3BackboneConfig | None
+    backbone: ResNetBackboneConfig | EfficientNetBackboneConfig | MyBackboneConfig | SwinTransformerBackboneConfig | VisionTransformerBackboneConfig | DINOv3BackboneConfig | LightlyDINOv2BackboneConfig | None
     detr_encoder: DetrTransformerEncoderConfig = DetrTransformerEncoderConfig()
     detr_decoder: DetrTransformerDecoderConfig = DetrTransformerDecoderConfig()
     dataset_dir: str
