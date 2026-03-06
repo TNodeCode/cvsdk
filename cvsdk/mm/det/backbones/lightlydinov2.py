@@ -32,7 +32,7 @@ class LightlyDINOv2ViTBackbone(nn.Module):
             torch.tensor: Model output
         """
         # Get the patch embeddings (shape BATCH_SIZE, N_PATCHES, HIDDEN_DIM)
-        z = self.model.forward_features(img)['x_norm_patchtokens']
+        z = self.model.forward_features(x)['x_norm_patchtokens']
         # batch_size, num_patches, hidden_size
         B, P, D = z.shape
         h = w = int(P ** 0.5)
