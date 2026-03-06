@@ -7,6 +7,7 @@ import onnxruntime
 import cv2
 import numpy as np
 
+
 @click.group()
 def yolo():
     """CLI for training and managing a YOLO model on a custom dataset."""
