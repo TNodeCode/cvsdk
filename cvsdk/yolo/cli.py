@@ -7,11 +7,16 @@ import onnxruntime
 import cv2
 import numpy as np
 
+from cvsdk.yolo.inspect import inspect as inspect_group
+
 
 @click.group()
 def yolo():
     """CLI for training and managing a YOLO model on a custom dataset."""
     pass
+
+
+yolo.add_command(inspect_group)
 
 @yolo.command()
 @click.option('--data-path', type=click.Path(exists=True), default='./data/my-dataset', help='Path to training data')
