@@ -1,13 +1,19 @@
 import click
 from ultralytics import YOLO, RTDETR
+import ultralytics.data.dataset as dataset
+import ultralytics.data.build as build
 import pandas as pd
 from pathlib import Path
 from glob import glob
 import onnxruntime
 import cv2
 import numpy as np
+from cvsdk.yolo.dataset_weighted import YOLOWeightedDataset
 
 from cvsdk.yolo.inspect import inspect as inspect_group
+
+dataset.YOLODataset = YOLOWeightedDataset
+build.YOLODataset = YOLOWeightedDataset
 
 
 @click.group()
