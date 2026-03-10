@@ -1,6 +1,6 @@
 import torch
-import torchvision
-import importlib
+from dotenv import load_dotenv
+load_dotenv()
 
 # Disable MPS backend if available to avoid potential issues on macOS
 if hasattr(torch.backends, "mps"):
