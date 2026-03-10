@@ -30,13 +30,14 @@ yolo.add_command(inspect_group)
 @click.option('--epochs', type=int, default=10, help='Number of epochs for training')
 @click.option('--batch-size', type=int, default=2, help='Batch size')
 @click.option('--img-size', type=int, default=640, help='Image size for training')
+@click.option('--workers', type=int, default=0, help='Number of workers for data loading (0 = no workers)')
 @click.option('--resume', type=click.Path(exists=True), help='Path to checkpoint to resume training')
-def train(data_path, model_name, epochs, batch_size, img_size, resume):
+def train(data_path, model_name, epochs, batch_size, img_size, workers, resume):
     """Train the YOLO model."""
     print(f"Training {model_name} on {data_path} for {epochs} epochs at image size {img_size}.")
     model = YOLO(model_name) if "yolo" in model_name else RTDETR(model_name)
     # Training the model
-    model.train(data=data_path, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume)
+    model.train(data=data_path, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume, workers=workers)
     print("Training completed.")
 
 @yolo.command()
