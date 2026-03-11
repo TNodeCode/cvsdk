@@ -17,7 +17,7 @@ class DINOv3ViTBackbone(nn.Module):
         self.model = DINOv3ViTModel(self.config)
         self.layer_norm = layer_norm
         if self.layer_norm:
-            self.norms = [nn.LayerNorm(384, eps=1e-5, elementwise_affine=True) for _ in range(len(layers) + int(output_patches))]
+            self.norms = nn.ModuleList([nn.LayerNorm(384, eps=1e-5, elementwise_affine=True) for _ in range(len(layers) + int(output_patches))])
         if not self.finetuning:
             self._freeze()
 
