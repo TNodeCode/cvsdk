@@ -19,9 +19,14 @@ class IdentityMapper(BaseModule):
     as it expects to be used with the ViT backbone which outputs a tuple of
     outputs from different stages which all have the same feature dimension and spatial dimensions.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, multiply: int = 0, *args, **kwargs):
+        self.multiply = multiply
         super().__init__()
 
-    def forward(self, inputs: Tuple[Tensor]) -> Tuple[Tensor]:
+    def forward(self, inputs: Tensor | Tuple[Tensor]) -> Tuple[Tensor]:
         """Forward function."""
+        if self.multiply:
+            return tuple([inputs for _ in range(self.multiply)])
+        if not type(inputs) == tuple:
+            inputs = (inputs,)
         return inputs
