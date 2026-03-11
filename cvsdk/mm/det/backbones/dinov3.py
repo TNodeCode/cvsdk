@@ -8,13 +8,16 @@ from transformers import DINOv3ViTConfig, DINOv3ViTModel
 @MODELS.register_module()
 class DINOv3ViTBackbone(nn.Module):
 
-    def __init__(self, finetuning=False, output_patches=False, layers=[2,5,8,11], *args, **kwargs):
+    def __init__(self, finetuning=False, output_patches=False, layers=[2,5,8,11], layer_norm=True, *args, **kwargs):
         super(DINOv3ViTBackbone, self).__init__()
         self.finetuning = finetuning
         self.layers = layers
         self.output_patches = output_patches
         self.config = DINOv3ViTConfig()
         self.model = DINOv3ViTModel(self.config)
+        self.layer_norm = layer_norm
+        if self.layer_norm:
+            self.norms = [nn.LayerNorm(384, eps=1e-5, elementwise_affine=True) for _ in range(len(layers) + int(output_patches))]
         if not self.finetuning:
             self._freeze()
 
@@ -50,8 +53,11 @@ class DINOv3ViTBackbone(nn.Module):
         if len(outputs.keys()) == 0:
             outputs[11] = z.last_hidden_state
 
-        for k in outputs:
-            z = outputs[k]
+        for i, k in enumerate(outputs):
+            if self.layer_norm:
+                z = self.norms[i](outputs[k])
+            else:
+                z = outputs[k]
             # remove the [CLS] token
             z = z[:, 1:, :]
             # batch_size, num_patches, hidden_size
