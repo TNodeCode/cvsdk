@@ -1,6 +1,8 @@
 """CLI for RF DETR models - training, evaluation, and export."""
 import os
 import click
+from pathlib import Path
+from PIL import Image
 from rfdetr import RFDETRNano, RFDETRSmall, RFDETRBase, RFDETRMedium, RFDETRLarge, RFDETRXLarge, RFDETR2XLarge
 
 
@@ -139,12 +141,9 @@ def eval(checkpoint, size, dataset_dir, output, score_threshold):
     model = model_class(pretrain_weights=checkpoint)
     
     # Get all images in the dataset directory
-    supported_ext = ('.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff')
-    image_files = [
-        os.path.join(dataset_dir, fname)
-        for fname in os.listdir(dataset_dir)
-        if fname.lower().endswith(supported_ext)
-    ]
+    folder = Path(dataset_dir)
+    image_extensions = {".jpg", ".jpeg", ".png"}
+    image_files = [p for p in  folder.rglob("*") if p.suffix.lower() in image_extensions]
     
     if not image_files:
         click.echo("No images found in the specified dataset directory.")
@@ -154,16 +153,17 @@ def eval(checkpoint, size, dataset_dir, output, score_threshold):
     
     all_detections = []
     for image_path in image_files:
-        detections = model.predict(image_path)
-        for det in detections:
+        image = Image.open(image_path)
+        detections = model.predict(image)
+        for xyxy, confidence, class_id in zip(detections.xyxy, detections.confidence, detections.class_id):
             all_detections.append({
-                'image': os.path.basename(image_path),
-                'label': det.label,
-                'score': det.score,
-                'x': det.x,
-                'y': det.y,
-                'width': det.width,
-                'height': det.height,
+                'image': str(image_path).replace(dataset_dir, ""),
+                'label': int(class_id),
+                'score': float(confidence),
+                'x0': int(round(xyxy[0])),
+                'y0': int(round(xyxy[1])),
+                'x1': int(round(xyxy[2])),
+                'y1': int(round(xyxy[3])),
             })
     
     # Save all detections to CSV
