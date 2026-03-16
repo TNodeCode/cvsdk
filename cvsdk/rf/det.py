@@ -154,6 +154,9 @@ def eval(checkpoint, size, dataset_dir, output, score_threshold):
     all_detections = []
     for image_path in image_files:
         image = Image.open(image_path)
+        # Convert single-channel images to 3-channel RGB
+        if image.mode == 'L':
+            image = image.convert('RGB')
         detections = model.predict(image)
         for xyxy, confidence, class_id in zip(detections.xyxy, detections.confidence, detections.class_id):
             all_detections.append({
