@@ -51,13 +51,15 @@ def val(data_path, model_path):
     print(f"Validation Results: {results}")
 
 @yolo.command()
-@click.option('--images', type=str, required=True, help='Glob string for images to run inference on')
+@click.option('--images', type=str, required=True, help='Directory where to search for images to run inference on')
 @click.option('--model-path', type=click.Path(exists=True), required=True, help='Path to trained YOLO model')
 @click.option('--output-csv', type=click.Path(), help="Path to save detections as CSV")
 def inference(images, model_path, output_csv):
     """Run inference on images."""
     model = YOLO(model_path)
-    img_paths = glob(images)
+    folder = Path(images)
+    image_extensions = {".jpg", ".jpeg", ".png"}
+    img_paths = [p for p in  folder.rglob("*") if p.suffix.lower() in image_extensions]
     detections = []
 
     for img_path in img_paths:

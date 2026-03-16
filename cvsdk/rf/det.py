@@ -35,7 +35,8 @@ def det():
 @click.option('--output-dir', required=True, type=click.Path(), help='Path to the output directory for saving checkpoints and logs.')
 @click.option('--resume', default=None, type=click.Path(exists=True), help='Path to a checkpoint to resume training from.')
 @click.option('--early-stopping', is_flag=True, default=True, help='Enable early stopping (default: True).')
-def train(dataset_dir, size, epochs, batch_size, grad_accum_steps, lr, output_dir, resume, early_stopping):
+@click.option('--workers', type=int, default=0, help='Number of workers for data loading (0 = no workers)')
+def train(dataset_dir, size, epochs, batch_size, grad_accum_steps, lr, output_dir, resume, early_stopping, workers):
     """
     Train an RF DETR model on a dataset.
     
@@ -64,6 +65,7 @@ def train(dataset_dir, size, epochs, batch_size, grad_accum_steps, lr, output_di
         output_dir=output_dir,
         resume=resume,
         early_stopping=early_stopping,
+        num_workers=workers,
     )
     
     click.echo("Training completed successfully!")

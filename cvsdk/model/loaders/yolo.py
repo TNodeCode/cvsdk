@@ -76,7 +76,7 @@ class YOLOLoader:
                     categories[class_id] = class_name
                     
                     # Get all image files in the class directory
-                    for img_path in class_dir.glob("*.*"):
+                    for img_path in class_dir.glob("**/*.*"):
                         if img_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp']:
                             file_name = str(img_path.relative_to(yolo_root))
                             width, height = _get_image_dimensions(img_path)
@@ -103,9 +103,11 @@ class YOLOLoader:
                 if not split_image_dir.exists():
                     continue
                     
-                for img_path in split_image_dir.glob("*.*"):
+                for img_path in split_image_dir.glob("**/*.*"):
                     file_name = str(img_path.relative_to(yolo_root))
-                    label_path = label_dir / split_dir / (img_path.stem + ".txt")
+                    # Get the relative path from the split image directory to preserve subdirectories
+                    rel_path = img_path.relative_to(split_image_dir)
+                    label_path = label_dir / split_dir / rel_path.with_suffix(".txt")
                     width, height = _get_image_dimensions(img_path)
 
                     image = Image(
@@ -124,30 +126,58 @@ class YOLOLoader:
 
                                 if task_type == "detection":
                                     cx, cy, w, h = parts[1:]
-                                    xmin = cx - w / 2
-                                    ymin = cy - h / 2
+                                    # Convert normalized YOLO coordinates to pixel coordinates
+                                    xmin = int((cx - w / 2) * width)
+                                    ymin = int((cy - h / 2) * height)
+                                    box_width = int(w * width)
+                                    box_height = int(h * height)
+                                    # Clamp coordinates to not exceed image dimensions
+                                    xmin = max(0, min(xmin, width - 1))
+                                    ymin = max(0, min(ymin, height - 1))
+                                    box_width = max(1, min(box_width, width - xmin))
+                                    box_height = max(1, min(box_height, height - ymin))
                                     image.bounding_boxes.append(
                                         BoundingBox(
                                             xmin=xmin,
                                             ymin=ymin,
-                                            width=w,
-                                            height=h,
+                                            width=box_width,
+                                            height=box_height,
                                             category_id=class_id
                                         )
                                     )
 
                                 elif task_type == "segmentation":
                                     cx, cy, w, h, *seg = parts[1:]
+                                    # Convert normalized YOLO coordinates to pixel coordinates
+                                    xmin = int((cx - w / 2) * width)
+                                    ymin = int((cy - h / 2) * height)
+                                    box_width = int(w * width)
+                                    box_height = int(h * height)
+                                    # Clamp coordinates to not exceed image dimensions
+                                    xmin = max(0, min(xmin, width - 1))
+                                    ymin = max(0, min(ymin, height - 1))
+                                    box_width = max(1, min(box_width, width - xmin))
+                                    box_height = max(1, min(box_height, height - ymin))
                                     image.bounding_boxes.append(
                                         BoundingBox(
-                                            xmin=cx - w / 2,
-                                            ymin=cy - h / 2,
-                                            width=w,
-                                            height=h,
+                                            xmin=xmin,
+                                            ymin=ymin,
+                                            width=box_width,
+                                            height=box_height,
                                             category_id=class_id
                                         )
                                     )
-                                    polygons = [seg]  # In YOLO-seg each object has one polygon
+                                    # Convert normalized polygon coordinates to pixel coordinates
+                                    # YOLO-seg format: cx, cy, w, h, x1, y1, x2, y2, ...
+                                    pixel_seg = []
+                                    for coord in seg:
+                                        # Alternate between x (multiply by width) and y (multiply by height)
+                                        idx = len(pixel_seg)
+                                        if idx % 2 == 0:
+                                            pixel_seg.append(int(coord * width))
+                                        else:
+                                            pixel_seg.append(int(coord * height))
+                                    polygons = [pixel_seg]
                                     image.segmentation_masks.append(
                                         SegmentationMask(
                                             segmentation=polygons,
@@ -171,14 +201,22 @@ class YOLOLoader:
                                     # YOLO tracking: class_id track_id cx cy w h
                                     track_id = int(parts[1])
                                     cx, cy, w, h = parts[2:]
-                                    xmin = cx - w / 2
-                                    ymin = cy - h / 2
+                                    # Convert normalized YOLO coordinates to pixel coordinates
+                                    xmin = int((cx - w / 2) * width)
+                                    ymin = int((cy - h / 2) * height)
+                                    box_width = int(w * width)
+                                    box_height = int(h * height)
+                                    # Clamp coordinates to not exceed image dimensions
+                                    xmin = max(0, min(xmin, width - 1))
+                                    ymin = max(0, min(ymin, height - 1))
+                                    box_width = max(1, min(box_width, width - xmin))
+                                    box_height = max(1, min(box_height, height - ymin))
                                     image.bounding_boxes.append(
                                         BoundingBox(
                                             xmin=xmin,
                                             ymin=ymin,
-                                            width=w,
-                                            height=h,
+                                            width=box_width,
+                                            height=box_height,
                                             category_id=class_id,
                                             id=track_id
                                         )

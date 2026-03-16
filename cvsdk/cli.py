@@ -19,7 +19,7 @@ def cli() -> None:
     pass
 
 # Add groups to CLI
-if os.getenv("CVSDK_OPENMMLAB", False):
+if os.getenv("CVSDK_OPENMMLAB", "").lower() in ("1", "true"):
     from cvsdk.mm.det.cli import mmdet as mmdet_cli
     from cvsdk.mm.pretrain.cli import mmpretrain as mmpretrain_cli
     from cvsdk.mm.segmentation.cli import mmseg as mmseg_cli

@@ -8,6 +8,7 @@ from cvsdk.mm.det.config import TrainingConfig
 from collections import OrderedDict
 from rich.pretty import pprint
 from structlog import get_logger
+from cvsdk.mm.det.datasets import *
 from cvsdk.mm.det.backbones import *
 from cvsdk.mm.det.necks import *
 from cvsdk.mm.det.vitdet.vitdet import *

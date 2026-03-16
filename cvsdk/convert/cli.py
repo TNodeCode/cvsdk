@@ -14,11 +14,11 @@ def convert() -> None:
 
 @convert.command()
 @click.argument("yolo_root", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.argument("output_path", type=click.Path(file_okay=True, dir_okay=False))
+@click.argument("output_path", type=click.Path(file_okay=True, dir_okay=True))
 @click.option("--task-type", default="detection", type=click.Choice(["classification", "detection", "segmentation", "panoptic", "tracking"]), help="Task type for the dataset")
-@click.option("--train-dir", default=None, help="Custom directory name for training split (default: 'train')")
-@click.option("--val-dir", default=None, help="Custom directory name for validation split (default: 'val')")
-@click.option("--test-dir", default=None, help="Custom directory name for test split (default: 'test')")
+@click.option("--train-dir", default="train", help="Custom directory name for training split (default: 'train')")
+@click.option("--val-dir", default="val", help="Custom directory name for validation split (default: 'val')")
+@click.option("--test-dir", default="test", help="Custom directory name for test split (default: 'test')")
 def yolo_to_coco(yolo_root: str, output_path: str, task_type: str, train_dir: str, val_dir: str, test_dir: str) -> None:
     """Convert a YOLO dataset to COCO format.
     
