@@ -60,7 +60,7 @@ def coco_to_yolo(coco_json: str, output_dir: str, task_type: str) -> None:
 
 @convert.command()
 @click.argument("yolo_root", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.argument("output_path", type=click.Path(file_okay=True, dir_okay=False))
+@click.argument("output_path", type=click.Path(file_okay=False, dir_okay=True))
 @click.option("--task-type", default="detection", type=click.Choice(["classification", "detection", "segmentation", "panoptic", "tracking"]), help="Task type for the dataset")
 @click.option("--file-format", default=None, type=click.Choice(["csv", "parquet"]), help="Output file format (default: inferred from output_path)")
 @click.option("--train-dir", default=None, help="Custom directory name for training split (default: 'train')")
@@ -69,9 +69,26 @@ def coco_to_yolo(coco_json: str, output_dir: str, task_type: str) -> None:
 def yolo_to_df(yolo_root: str, output_path: str, task_type: str, file_format: str, train_dir: str, val_dir: str, test_dir: str) -> None:
     """Convert a YOLO dataset to DataFrame format (CSV or Parquet).
     
+    For detection datasets, the output DataFrame will have the following columns:
+    - x0: top-left x coordinate
+    - y0: top-left y coordinate
+    - x1: bottom-right x coordinate
+    - y1: bottom-right y coordinate
+    - image: path to the image file
+    - label: integer label encoding
+    - width: image width
+    - height: image height
+    
+    Each bounding box has a separate row in the DataFrame.
+    
+    The output is saved to a directory with separate files per split:
+    - df_train.csv (or df_train.parquet)
+    - df_val.csv (or df_val.parquet)
+    - df_test.csv (or df_test.parquet)
+    
     Args:
         yolo_root: Path to the YOLO dataset root directory.
-        output_path: Path to the output CSV or Parquet file.
+        output_path: Path to the output directory.
         task_type: Task type of the dataset.
         file_format: Output file format ('csv' or 'parquet').
         train_dir: Custom directory name for training split.
@@ -85,7 +102,12 @@ def yolo_to_df(yolo_root: str, output_path: str, task_type: str, file_format: st
         val_dir=val_dir,
         test_dir=test_dir
     )
-    DataframeLoader.export_dataset(dataset, output_path=output_path, file_format=file_format)
+    DataframeLoader.export_dataset(
+        dataset,
+        output_path=output_path,
+        file_format=file_format,
+        split_map=dataset.split_map
+    )
     click.echo(f"Converted YOLO dataset from {yolo_root} to DataFrame format at {output_path}")
 
 
@@ -96,6 +118,19 @@ def yolo_to_df(yolo_root: str, output_path: str, task_type: str, file_format: st
 @click.option("--file-format", default=None, type=click.Choice(["csv", "parquet"]), help="Input file format (default: inferred from input_path)")
 def df_to_yolo(input_path: str, output_dir: str, task_type: str, file_format: str) -> None:
     """Convert a DataFrame dataset (CSV or Parquet) to YOLO format.
+    
+    For detection datasets, the input DataFrame should have the following columns:
+    - x0: top-left x coordinate
+    - y0: top-left y coordinate
+    - x1: bottom-right x coordinate
+    - y1: bottom-right y coordinate
+    - image: path to the image file
+    - label: integer label encoding
+    - width: image width
+    - height: image height
+    
+    Legacy column names (x_min, y_min, x_max, y_max, class_id) are also supported.
+    Each bounding box should have a separate row in the DataFrame.
     
     Args:
         input_path: Path to the input CSV or Parquet file.
@@ -116,6 +151,18 @@ def df_to_yolo(input_path: str, output_dir: str, task_type: str, file_format: st
 def coco_to_df(coco_json: str, output_path: str, task_type: str, file_format: str) -> None:
     """Convert a COCO dataset to DataFrame format (CSV or Parquet).
     
+    For detection datasets, the output DataFrame will have the following columns:
+    - x0: top-left x coordinate
+    - y0: top-left y coordinate
+    - x1: bottom-right x coordinate
+    - y1: bottom-right y coordinate
+    - image: path to the image file
+    - label: integer label encoding
+    - width: image width
+    - height: image height
+    
+    Each bounding box has a separate row in the DataFrame.
+    
     Args:
         coco_json: Path to the COCO JSON file.
         output_path: Path to the output CSV or Parquet file.
@@ -134,6 +181,19 @@ def coco_to_df(coco_json: str, output_path: str, task_type: str, file_format: st
 @click.option("--file-format", default=None, type=click.Choice(["csv", "parquet"]), help="Input file format (default: inferred from input_path)")
 def df_to_coco(input_path: str, output_path: str, task_type: str, file_format: str) -> None:
     """Convert a DataFrame dataset (CSV or Parquet) to COCO format.
+    
+    For detection datasets, the input DataFrame should have the following columns:
+    - x0: top-left x coordinate
+    - y0: top-left y coordinate
+    - x1: bottom-right x coordinate
+    - y1: bottom-right y coordinate
+    - image: path to the image file
+    - label: integer label encoding
+    - width: image width
+    - height: image height
+    
+    Legacy column names (x_min, y_min, x_max, y_max, class_id) are also supported.
+    Each bounding box should have a separate row in the DataFrame.
     
     Args:
         input_path: Path to the input CSV or Parquet file.

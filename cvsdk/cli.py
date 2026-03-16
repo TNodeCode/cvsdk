@@ -5,6 +5,7 @@ from cvsdk.torch.det.cli import torchdet as torchdet_cli
 from cvsdk.inspection.cli import inspect as inspection_cli
 from cvsdk.convert.cli import convert as convert_cli
 from cvsdk.rf.cli import rf as rf_cli
+from cvsdk.eval.cli import eval as eval_cli
 from structlog import get_logger
 import click
 import os
@@ -33,6 +34,7 @@ cli.add_command(torchdet_cli)
 cli.add_command(inspection_cli)
 cli.add_command(convert_cli)
 cli.add_command(rf_cli)
+cli.add_command(eval_cli)
 
 
 # Entry point of CLI

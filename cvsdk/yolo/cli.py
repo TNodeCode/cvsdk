@@ -1,3 +1,4 @@
+import os
 import click
 from ultralytics import YOLO, RTDETR
 import ultralytics.data.dataset as dataset
@@ -8,6 +9,7 @@ from glob import glob
 import onnxruntime
 import cv2
 import numpy as np
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeRemainingColumn
 from cvsdk.yolo.dataset_weighted import YOLOWeightedDataset
 
 from cvsdk.yolo.inspect import inspect as inspect_group
@@ -36,8 +38,10 @@ def train(data_path, model_name, epochs, batch_size, img_size, workers, resume):
     """Train the YOLO model."""
     print(f"Training {model_name} on {data_path} for {epochs} epochs at image size {img_size}.")
     model = YOLO(model_name) if "yolo" in model_name else RTDETR(model_name)
+    cfg_path = os.path.join(os.path.dirname(data_path), "config.yaml")
+    cfg_path = cfg_path if os.path.exists(cfg_path) else None
     # Training the model
-    model.train(data=data_path, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume, workers=workers)
+    model.train(data=data_path, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume, workers=workers, cfg=cfg_path)
     print("Training completed.")
 
 @yolo.command()
@@ -62,22 +66,38 @@ def inference(images, model_path, output_csv):
     img_paths = [p for p in  folder.rglob("*") if p.suffix.lower() in image_extensions]
     detections = []
 
-    for img_path in img_paths:
-        results = model(img_path)
-        for r in results:
-            for box in r.boxes:
-                xmin, ymin, xmax, ymax = box.xyxy[0]
-                cls = int(box.cls[0])
-                conf = float(box.conf[0])
-                detections.append({
-                    'x0': int(xmin),
-                    'y0': int(ymin),
-                    'x1': int(xmax),
-                    'y1': int(ymax),
-                    'image': str(img_path).replace(images, ""),
-                    'label': cls,
-                    'score': conf
-                })
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeRemainingColumn(),
+    ) as progress:
+        task = progress.add_task("Running inference...", total=len(img_paths))
+
+        for img_path in img_paths:
+            results = model(img_path)
+            img = cv2.imread(str(img_path))
+            img_height, img_width = img.shape[:2] if img is not None else (0, 0)
+
+            for r in results:
+                for box in r.boxes:
+                    xmin, ymin, xmax, ymax = box.xyxy[0]
+                    cls = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    detections.append({
+                        'x0': int(xmin),
+                        'y0': int(ymin),
+                        'x1': int(xmax),
+                        'y1': int(ymax),
+                        'image': str(img_path).replace(images, ""),
+                        'label': cls,
+                        'score': conf,
+                        'img_width': img_width,
+                        'img_height': img_height
+                    })
+
+            progress.update(task, advance=1)
 
     if output_csv:
         pd.DataFrame(detections).to_csv(output_csv, index=False)
@@ -114,4 +134,4 @@ def onnx_inference(onnx_model_path, image_path):
             print(f"Detected class {cls} at [{xmin}, {ymin}, {xmax}, {ymax}] with confidence {conf}")
 
 if __name__ == '__main__':
-    cli()
+    yolo()

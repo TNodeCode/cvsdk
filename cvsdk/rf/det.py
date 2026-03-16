@@ -3,6 +3,7 @@ import os
 import click
 from pathlib import Path
 from PIL import Image
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeRemainingColumn
 from rfdetr import RFDETRNano, RFDETRSmall, RFDETRBase, RFDETRMedium, RFDETRLarge, RFDETRXLarge, RFDETR2XLarge
 
 
@@ -122,21 +123,14 @@ def detect(checkpoint, size, image, output, score_threshold):
 @click.option('--size', default='base', type=click.Choice(MODEL_SIZES), help='Model size: nano, small, base, medium, large, xlarge, 2xlarge (default: base).')
 @click.option('--dataset-dir', required=True, type=click.Path(exists=True), help='Path to the dataset directory.')
 @click.option('--output', default='evaluation_results.csv', type=click.Path(), help='Output CSV file path (default: evaluation_results.csv).')
-@click.option('--score-threshold', default=0.5, type=float, help='Minimum confidence score for bounding box detection (default: 0.5).')
-def eval(checkpoint, size, dataset_dir, output, score_threshold):
+@click.option('--threshold', default=0.5, type=float, help='Minimum confidence score for bounding box detection (default: 0.5).')
+def eval(checkpoint, size, dataset_dir, output, threshold):
     """
     Evaluate an RF DETR model on a dataset.
     
     This command loads a model from a checkpoint and evaluates it on the specified dataset,
     saving the results to a CSV file.
-    """
-    click.echo(f"Running RF DETR evaluation...")
-    click.echo(f"Model size: {size}")
-    click.echo(f"Checkpoint: {checkpoint}")
-    click.echo(f"Dataset directory: {dataset_dir}")
-    click.echo(f"Score threshold: {score_threshold}")
-    click.echo(f"Output file: {output}")
-    
+    """   
     model_class = DET_MODEL_CLASSES[size]
     model = model_class(pretrain_weights=checkpoint)
     
@@ -152,34 +146,47 @@ def eval(checkpoint, size, dataset_dir, output, score_threshold):
     click.echo(f"Found {len(image_files)} images to evaluate")
     
     all_detections = []
-    for image_path in image_files:
-        image = Image.open(image_path)
-        # Convert single-channel or 4-channel images to 3-channel RGB
-        if image.mode == 'L':
-            image = image.convert('RGB')
-        elif image.mode == 'RGBA':
-            # Create white background and paste image on it
-            background = Image.new('RGB', image.size, (255, 255, 255))
-            background.paste(image, mask=image.split()[3])  # Use alpha channel as mask
-            image = background
-        detections = model.predict(image)
-        for xyxy, confidence, class_id in zip(detections.xyxy, detections.confidence, detections.class_id):
-            all_detections.append({
-                'image': str(image_path).replace(dataset_dir, ""),
-                'label': int(class_id),
-                'score': float(confidence),
-                'x0': int(round(xyxy[0])),
-                'y0': int(round(xyxy[1])),
-                'x1': int(round(xyxy[2])),
-                'y1': int(round(xyxy[3])),
-            })
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeRemainingColumn(),
+    ) as progress:
+        task = progress.add_task(f"Evaluating {len(image_files)} images...", total=len(image_files))
+        
+        for image_path in image_files:
+            image = Image.open(image_path)
+            # Convert single-channel or 4-channel images to 3-channel RGB
+            if image.mode == 'L':
+                image = image.convert('RGB')
+            elif image.mode == 'RGBA':
+                # Create white background and paste image on it
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                background.paste(image, mask=image.split()[3])  # Use alpha channel as mask
+                image = background
+            detections = model.predict(image, threshold=threshold)
+            img_width, img_height = image.size
+            for xyxy, confidence, class_id in zip(detections.xyxy, detections.confidence, detections.class_id):
+                all_detections.append({
+                    'image': str(image_path).replace(dataset_dir, ""),
+                    'label': int(class_id),
+                    'score': float(confidence),
+                    'x0': int(round(xyxy[0])),
+                    'y0': int(round(xyxy[1])),
+                    'x1': int(round(xyxy[2])),
+                    'y1': int(round(xyxy[3])),
+                    'width': img_width,
+                    'height': img_height,
+                })
+            progress.update(task, advance=1)
     
     # Save all detections to CSV
     import pandas as pd
     if all_detections:
         df = pd.DataFrame(all_detections)
     else:
-        df = pd.DataFrame(columns=['image', 'label', 'score', 'x', 'y', 'width', 'height'])
+        df = pd.DataFrame(columns=['image', 'label', 'score', 'x0', 'y0', 'x1', 'y1', 'width', 'height'])
     
     df.to_csv(output, index=False)
     click.echo(f"Evaluation results saved to {output}")
