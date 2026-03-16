@@ -70,8 +70,13 @@ def inference(images, model_path, output_csv):
                 cls = int(box.cls[0])
                 conf = float(box.conf[0])
                 detections.append({
-                    'xmin': int(xmin), 'ymin': int(ymin), 'xmax': int(xmax), 'ymax': int(ymax),
-                    'cls': cls, 'score': conf
+                    'x0': int(xmin),
+                    'y0': int(ymin),
+                    'x1': int(xmax),
+                    'y1': int(ymax),
+                    'image': img_path.replace(images, "")
+                    'label': cls,
+                    'score': conf
                 })
 
     if output_csv:
