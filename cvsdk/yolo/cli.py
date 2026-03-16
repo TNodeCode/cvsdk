@@ -74,7 +74,7 @@ def inference(images, model_path, output_csv):
                     'y0': int(ymin),
                     'x1': int(xmax),
                     'y1': int(ymax),
-                    'image': img_path.replace(images, ""),
+                    'image': str(img_path).replace(images, ""),
                     'label': cls,
                     'score': conf
                 })
