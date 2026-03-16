@@ -154,9 +154,14 @@ def eval(checkpoint, size, dataset_dir, output, score_threshold):
     all_detections = []
     for image_path in image_files:
         image = Image.open(image_path)
-        # Convert single-channel images to 3-channel RGB
+        # Convert single-channel or 4-channel images to 3-channel RGB
         if image.mode == 'L':
             image = image.convert('RGB')
+        elif image.mode == 'RGBA':
+            # Create white background and paste image on it
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            background.paste(image, mask=image.split()[3])  # Use alpha channel as mask
+            image = background
         detections = model.predict(image)
         for xyxy, confidence, class_id in zip(detections.xyxy, detections.confidence, detections.class_id):
             all_detections.append({
