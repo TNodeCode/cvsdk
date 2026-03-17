@@ -220,6 +220,10 @@ class AttentionFPN(BaseModule):
         attention_reduction (int): Reduction ratio for channel attention
             MLP. Only used when attention_type is 'channel' or 'cbam'.
             Defaults to 16.
+        learnable_weights (bool): Whether to use learnable weights for
+            weighted addition in the top-down path. When enabled, uses
+            p_i * c_{i-1} + (1-p_i) * interpolate(c_i) formula where p_i
+            is a learnable parameter. Defaults to False.
         init_cfg (:obj:`ConfigDict` or dict or list[:obj:`ConfigDict` or \
             dict]): Initialization config dict.
 
@@ -255,6 +259,7 @@ class AttentionFPN(BaseModule):
         upsample_cfg: ConfigType = dict(mode='nearest'),
         attention_type: str = 'none',
         attention_reduction: int = 16,
+        learnable_weights: bool = False,
         init_cfg: MultiConfig = dict(
             type='Xavier', layer='Conv2d', distribution='uniform')
     ) -> None:
@@ -274,6 +279,13 @@ class AttentionFPN(BaseModule):
             f"attention_type must be 'none', 'spatial', 'channel', or 'cbam', got {attention_type}"
         self.attention_type = attention_type
         self.attention_reduction = attention_reduction
+        
+        # Learnable weights for weighted addition in top-down path
+        self.learnable_weights = learnable_weights
+        if self.learnable_weights:
+            # Create learnable parameters for each stage (except the last one)
+            # p_i controls the weighted sum: p_i * c_{i-1} + (1-p_i) * interpolate(c_i)
+            self.weight_params = nn.Parameter(torch.ones(num_outs - 1))
 
         if end_level == -1 or end_level == self.num_ins - 1:
             self.backbone_end_level = self.num_ins
@@ -391,12 +403,20 @@ class AttentionFPN(BaseModule):
             #  it cannot co-exist with `size` in `F.interpolate`.
             if 'scale_factor' in self.upsample_cfg:
                 # fix runtime error of "+=" inplace operation in PyTorch 1.10
-                laterals[i - 1] = laterals[i - 1] + F.interpolate(
-                    laterals[i], **self.upsample_cfg)
+                upsampled = F.interpolate(laterals[i], **self.upsample_cfg)
             else:
                 prev_shape = laterals[i - 1].shape[2:]
-                laterals[i - 1] = laterals[i - 1] + F.interpolate(
+                upsampled = F.interpolate(
                     laterals[i], size=prev_shape, **self.upsample_cfg)
+            
+            # Apply learnable weights if enabled
+            # Formula: p_i * c_{i-1} + (1-p_i) * interpolate(c_i)
+            if self.learnable_weights:
+                # weight_params[i-1] is the weight for level i-1
+                weight = torch.sigmoid(self.weight_params[i - 1])
+                laterals[i - 1] = weight * laterals[i - 1] + (1 - weight) * upsampled
+            else:
+                laterals[i - 1] = laterals[i - 1] + upsampled
 
         # build outputs
         # part 1: from original levels
