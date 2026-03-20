@@ -145,7 +145,6 @@ class MultiScaleProjector(BaseModule):
         out_channels,
         scale_factors=[4.0, 2.0, 1.0, 0.5],
         num_blocks=3,
-        use_extra_pool=False
     ):
         """
         Args:
@@ -162,7 +161,7 @@ class MultiScaleProjector(BaseModule):
 
         stages_sampling = []
         stages = []
-        self.use_extra_pool = use_extra_pool
+        self.use_extra_pool = False
         for scale in scale_factors:
             stages_sampling.append([])
             for in_dim in in_channels:
