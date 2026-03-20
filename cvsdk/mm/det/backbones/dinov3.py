@@ -1,7 +1,5 @@
-import torch
 import torch.nn as nn
 from mmdet.registry import MODELS
-import transformers
 from transformers import DINOv3ViTConfig, DINOv3ViTModel
 
 
