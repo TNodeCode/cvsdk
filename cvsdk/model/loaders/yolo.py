@@ -110,12 +110,15 @@ class YOLOLoader:
                     label_path = label_dir / split_dir / rel_path.with_suffix(".txt")
                     width, height = _get_image_dimensions(img_path)
 
-                    image = Image(
-                        id=image_id,
-                        file_name=file_name,
-                        width=width,
-                        height=height,
-                    )
+                    try:
+                        image = Image(
+                            id=image_id,
+                            file_name=file_name,
+                            width=width,
+                            height=height,
+                        )
+                    except:
+                        continue
 
                     if label_path.exists():
                         with open(label_path) as f:
