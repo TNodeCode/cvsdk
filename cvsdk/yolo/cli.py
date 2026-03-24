@@ -42,7 +42,7 @@ def train(data, model, epochs, batch_size, img_size, workers, resume, save_dir):
     cfg_path = os.path.join(os.path.dirname(data), "config.yaml")
     cfg_path = cfg_path if os.path.exists(cfg_path) else None
     # Training the model
-    model.train(data=data, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume, workers=workers, cfg=cfg_path, patience=5, save_dir=save_dir)
+    model.train(data=data, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume, workers=workers, cfg=cfg_path, patience=5, save_dir=save_dir, exist_ok=False)
 
 @yolo.command()
 @click.option('--data', type=click.Path(exists=True), required=True, help='Path to validation data')
