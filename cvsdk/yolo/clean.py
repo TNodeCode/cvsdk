@@ -67,6 +67,11 @@ class DatasetCleaner:
         """
         Check if a label file exists and is not empty, and if it has valid class IDs and coordinates.
         
+        Supports both detection format (5 values) and segmentation format (variable number of coordinates).
+        
+        Detection format: <class_id> <x_center> <y_center> <width> <height>
+        Segmentation format: <class_id> <x1> <y1> <x2> <y2> <x3> <y3> ... (polygon coordinates)
+        
         Args:
             label_path: Path to the label file
             
@@ -100,14 +105,12 @@ class DatasetCleaner:
                     if not line:
                         continue
                     parts = line.split()
-                    if len(parts) < 5:
+                    # Detection format requires at least 5 values
+                    # Segmentation format requires at least 3 values (class_id + 1 coordinate pair)
+                    if len(parts) < 3:
                         continue
                     try:
                         class_id = int(parts[0])
-                        x_center = float(parts[1])
-                        y_center = float(parts[2])
-                        width = float(parts[3])
-                        height = float(parts[4])
                         
                         # Check class ID against valid_class_ids
                         if class_id in self.valid_class_ids:
@@ -115,10 +118,15 @@ class DatasetCleaner:
                         else:
                             has_background_class = True
                         
-                        # Check coordinates - center point should be within [0, 1]
-                        if (x_center < 0 or x_center > 1 or
-                            y_center < 0 or y_center > 1):
-                            has_invalid_coords = True
+                        # Check all coordinates - they should all be within [0, 1]
+                        # For detection: parts[1:5] are x_center, y_center, width, height
+                        # For segmentation: parts[1:] are all (xi, yi) coordinate pairs
+                        coords = parts[1:]
+                        for coord_str in coords:
+                            coord = float(coord_str)
+                            if coord < 0 or coord > 1:
+                                has_invalid_coords = True
+                                break
                             
                     except ValueError:
                         continue
