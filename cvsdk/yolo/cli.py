@@ -34,7 +34,7 @@ yolo.add_command(inspect_group)
 @click.option('--batch-size', type=int, default=2, help='Batch size')
 @click.option('--img-size', type=int, default=640, help='Image size for training')
 @click.option('--workers', type=int, default=0, help='Number of workers for data loading (0 = no workers)')
-@click.option('--resume', type=click.Path(exists=True), help='Path to checkpoint to resume training')
+@click.option('--resume', type=bool, default=False, help='Whether to resume training')
 @click.option('--save-dir', type=click.Path(exists=False), default=None, help='Path to save dir')
 def train(data, model, epochs, batch_size, img_size, workers, resume, save_dir):
     """Train the YOLO model."""
