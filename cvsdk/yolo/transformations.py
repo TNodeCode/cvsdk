@@ -50,7 +50,7 @@ custom_transforms = [
     # Noise variations
     A.OneOf([
         A.GaussNoise(
-            var_limit=(10.0, 50.0),
+            var_limit=(10.0, 10.0),
             p=1.0
         ),
         A.ISONoise(
@@ -59,12 +59,12 @@ custom_transforms = [
             p=1.0,
         ),
         A.SaltAndPepper(
-            amount=[0.01, 0.2],
+            amount=[0.01, 0.05],
             salt_vs_pepper=[0.5, 0.5],
             p=1.0,
         ),
         A.ShotNoise(
-            scale_range=[0.1, 0.3],
+            scale_range=[0.1, 0.2],
             p=1.0
         )
     ], p=1.0,
