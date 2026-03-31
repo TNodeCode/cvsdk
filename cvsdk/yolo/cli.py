@@ -14,6 +14,7 @@ from cvsdk.yolo.dataset_weighted import YOLOWeightedDataset
 from cvsdk.yolo.clean import DatasetCleaner
 
 from cvsdk.yolo.inspect import inspect as inspect_group
+from .transformations import custom_transforms
 
 dataset.YOLODataset = YOLOWeightedDataset
 build.YOLODataset = YOLOWeightedDataset
@@ -42,7 +43,19 @@ def train(data, model, epochs, batch_size, img_size, workers, resume, save_dir):
     cfg_path = os.path.join(os.path.dirname(data), "config.yaml")
     cfg_path = cfg_path if os.path.exists(cfg_path) else None
     # Training the model
-    model.train(data=data, epochs=epochs, batch=batch_size, imgsz=img_size, resume=resume, workers=workers, cfg=cfg_path, patience=5, save_dir=save_dir, exist_ok=False)
+    model.train(
+        data=data,
+        epochs=epochs,
+        batch=batch_size,
+        imgsz=img_size,
+        resume=resume,
+        workers=workers,
+        cfg=cfg_path,
+        patience=5,
+        save_dir=save_dir,
+        exist_ok=False,
+        augmentations=custom_transforms,  # Use custom transforms
+    )
 
 @yolo.command()
 @click.option('--data', type=click.Path(exists=True), required=True, help='Path to validation data')
