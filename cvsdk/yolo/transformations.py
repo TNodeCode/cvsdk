@@ -4,9 +4,13 @@ import albumentations as A
 see: https://explore.albumentations.ai
 """
 
-custom_transforms = [
-    # Blur variations
-    A.OneOf([
+def custom_transforms(
+        p_blur: float = 0.0,
+        p_noise: bool = 0.0,
+        p_compression: bool = 0.0,
+        p_hue: bool = 0.0
+    ):
+    blur = A.OneOf([
         A.MotionBlur(
             blur_limit=7,
             p=1.0
@@ -29,9 +33,9 @@ custom_transforms = [
             step_factor=[0.01, 0.03],
             p=1.0
         )
-    ], p=0.5),
-    # Compression
-    A.OneOf([
+    ], p=p_blur)
+
+    compression = A.OneOf([
         A.Downscale(
             scale_range=[0.2, 0.75],
             interpolation_pair={"upscale":0,"downscale":0},
@@ -46,9 +50,9 @@ custom_transforms = [
             num_bits=4,
             p=1.0
         ),
-    ], p=0.5),
-    # Noise variations
-    A.OneOf([
+    ], p=p_compression)
+    
+    noise = A.OneOf([
         A.GaussNoise(
             var_limit=(10.0, 10.0),
             p=1.0
@@ -67,10 +71,9 @@ custom_transforms = [
             scale_range=[0.1, 0.2],
             p=1.0
         )
-    ], p=1.0,
-    ),
-    # Color and contrast adjustments
-    A.OneOf([
+    ], p=p_noise)
+
+    color = A.OneOf([
         A.CLAHE(
             clip_limit=4.0,
             tile_grid_size=(8, 8),
@@ -123,5 +126,16 @@ custom_transforms = [
         A.ToSepia(
             p=1.0
         )
-    ], p=1.0),
-]
+    ], p=p_hue)
+
+    augmentations = []
+    if p_blur:
+        augmentations.append(blur)
+    if p_noise:
+        augmentations.append(noise)
+    if p_compression:
+        augmentations.append(compression)
+    if p_hue:
+        augmentations.append(color)
+
+    return augmentations
