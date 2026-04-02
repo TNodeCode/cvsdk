@@ -54,7 +54,7 @@ def train(data, model, epochs, batch_size, img_size, workers, resume, save_dir):
         patience=5,
         save_dir=save_dir,
         exist_ok=False,
-        augmentations=custom_transforms,  # Use custom transforms
+        #augmentations=custom_transforms,  # Use custom transforms
     )
 
 @yolo.command()
