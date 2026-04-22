@@ -4,6 +4,10 @@ import pandas as pd
 from pathlib import Path
 
 from cvsdk.eval.detection.confusion_matrix import DetectionConfusionMatrix
+from cvsdk.eval.detection.precision_confidence import PrecisionConfidenceCurve
+from cvsdk.eval.detection.recall_confidence import RecallConfidenceCurve
+from cvsdk.eval.detection.precision_recall import PrecisionRecallCurve
+from cvsdk.eval.detection.f1_confidence import F1ConfidenceCurve
 
 
 @click.group()
@@ -76,11 +80,34 @@ def det(ground_truth, detections, output_dir, iou_threshold, score_threshold, fi
     click.echo(f"  Recall: {result.recall:.4f}")
     click.echo(f"  F1 Score: {result.f1_score:.4f}")
     
-    # Save confusion matrix plot using the service class method
-    plot_path = output_path / 'confusion_matrix.png'
-    calculator.plot(str(plot_path))
-    click.echo(f"\nConfusion matrix plot saved to: {plot_path}")
-    
+    # Save confusion matrix plot
+    calculator.plot(str(output_path / 'confusion_matrix.png'))
+    click.echo(f"Confusion matrix plot saved to: {output_path / 'confusion_matrix.png'}")
+
+    # Precision-Confidence curve
+    PrecisionConfidenceCurve(gt_df, det_df, iou_threshold=iou_threshold).plot(
+        str(output_path / 'precision_confidence.png')
+    )
+    click.echo(f"Precision-Confidence plot saved to: {output_path / 'precision_confidence.png'}")
+
+    # Recall-Confidence curve
+    RecallConfidenceCurve(gt_df, det_df, iou_threshold=iou_threshold).plot(
+        str(output_path / 'recall_confidence.png')
+    )
+    click.echo(f"Recall-Confidence plot saved to: {output_path / 'recall_confidence.png'}")
+
+    # Precision-Recall curve
+    PrecisionRecallCurve(gt_df, det_df, iou_threshold=iou_threshold).plot(
+        str(output_path / 'precision_recall.png')
+    )
+    click.echo(f"Precision-Recall plot saved to: {output_path / 'precision_recall.png'}")
+
+    # F1-Confidence curve
+    F1ConfidenceCurve(gt_df, det_df, iou_threshold=iou_threshold).plot(
+        str(output_path / 'f1_confidence.png')
+    )
+    click.echo(f"F1-Confidence plot saved to: {output_path / 'f1_confidence.png'}")
+
     # Also save metrics as CSV
     per_class_metrics = calculator.get_per_class_metrics()
     metrics_data = []
