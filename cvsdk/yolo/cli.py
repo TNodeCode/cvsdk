@@ -39,7 +39,11 @@ yolo.add_command(inspect_group)
 @click.option('--workers', type=int, default=0, help='Number of workers for data loading (0 = no workers)')
 @click.option('--resume', type=bool, default=False, help='Whether to resume training')
 @click.option('--save-dir', type=click.Path(exists=False), default=None, help='Path to save dir')
-def train(data, model, config, epochs, batch_size, img_size, workers, resume, save_dir):
+@click.option('--p-blur', type=float, default=0.0, help='Probability for blurring image')
+@click.option('--p-noise', type=float, default=0.0, help='Probability for noisy image')
+@click.option('--p-compression', type=float, default=0.0, help='Probability for compressing image')
+@click.option('--p-hue', type=float, default=0.0, help='Probability for hue augmentation')
+def train(data, model, config, epochs, batch_size, img_size, workers, resume, save_dir, p_blur, p_noise, p_compression, p_hue):
     """Train the YOLO model."""
     model = YOLO(model) if "yolo" in model else RTDETR(model)
     if not config:
@@ -60,10 +64,10 @@ def train(data, model, config, epochs, batch_size, img_size, workers, resume, sa
         save_dir=save_dir,
         exist_ok=False,
         augmentations=custom_transforms(
-            p_blur=0.0,
-            p_noise=0.0,
-            p_compression=0.0,
-            p_hue=0.0
+            p_blur=p_blur,
+            p_noise=p_noise,
+            p_compression=p_compression,
+            p_hue=p_hue
         ),
     )
 
